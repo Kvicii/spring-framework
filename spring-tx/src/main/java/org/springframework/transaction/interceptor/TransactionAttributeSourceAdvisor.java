@@ -31,6 +31,8 @@ import org.springframework.util.Assert;
  * faster than just letting the TransactionInterceptor run and find out
  * itself that it has no work to do.
  *
+ * 实现了Advisor 包装了TransactionInterceptor和AnnotationTransactionAttributeSource的信息
+ *
  * @author Rod Johnson
  * @author Juergen Hoeller
  * @see #setTransactionInterceptor

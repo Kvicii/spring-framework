@@ -42,6 +42,8 @@ import java.util.Properties;
  *
  * <p>TransactionInterceptors are thread-safe.
  *
+ * <p>实现Advice功能 定义了拦截行为
+ *
  * @author Rod Johnson
  * @author Juergen Hoeller
  * @see TransactionProxyFactoryBean
