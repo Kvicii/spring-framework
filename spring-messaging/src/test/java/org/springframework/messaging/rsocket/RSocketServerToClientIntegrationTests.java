@@ -23,7 +23,6 @@ import io.rsocket.SocketAcceptor;
 import io.rsocket.frame.decoder.PayloadDecoder;
 import io.rsocket.transport.netty.server.CloseableChannel;
 import io.rsocket.transport.netty.server.TcpServerTransport;
-import io.rsocket.util.ByteBufPayload;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -103,15 +102,16 @@ public class RSocketServerToClientIntegrationTests {
 		ServerController serverController = context.getBean(ServerController.class);
 		serverController.reset();
 
+		RSocketStrategies strategies = context.getBean(RSocketStrategies.class);
+		ClientRSocketFactoryConfigurer clientResponderConfigurer =
+				RSocketMessageHandler.clientResponder(strategies, new ClientHandler());
+
 		RSocketRequester requester = null;
 		try {
 			requester = RSocketRequester.builder()
-					.rsocketFactory(factory -> {
-						factory.metadataMimeType("text/plain");
-						factory.setupPayload(ByteBufPayload.create("", connectionRoute));
-					})
-					.rsocketFactory(RSocketMessageHandler.clientResponder(new ClientHandler()))
-					.rsocketStrategies(context.getBean(RSocketStrategies.class))
+					.setupRoute(connectionRoute)
+					.rsocketStrategies(strategies)
+					.rsocketFactory(clientResponderConfigurer)
 					.connectTcp("localhost", server.address().getPort())
 					.block();
 

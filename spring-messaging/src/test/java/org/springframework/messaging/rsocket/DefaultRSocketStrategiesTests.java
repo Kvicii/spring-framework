@@ -57,6 +57,8 @@ public class DefaultRSocketStrategiesTests {
 		assertThat(strategies.routeMatcher()).isNotNull();
 		assertThat(strategies.metadataExtractor()).isNotNull();
 		assertThat(strategies.reactiveAdapterRegistry()).isNotNull();
+
+		assertThat(((DefaultMetadataExtractor) strategies.metadataExtractor()).getDecoders()).hasSize(4);
 	}
 
 	@Test

@@ -24,7 +24,6 @@ import java.util.function.Function;
 
 import io.rsocket.ConnectionSetupPayload;
 import io.rsocket.RSocket;
-import io.rsocket.RSocketFactory;
 import io.rsocket.SocketAcceptor;
 import io.rsocket.frame.FrameType;
 import reactor.core.publisher.Mono;
@@ -32,10 +31,6 @@ import reactor.core.publisher.Mono;
 import org.springframework.beans.BeanUtils;
 import org.springframework.core.ReactiveAdapterRegistry;
 import org.springframework.core.annotation.AnnotatedElementUtils;
-import org.springframework.core.codec.ByteArrayEncoder;
-import org.springframework.core.codec.ByteBufferEncoder;
-import org.springframework.core.codec.CharSequenceEncoder;
-import org.springframework.core.codec.DataBufferEncoder;
 import org.springframework.core.codec.Decoder;
 import org.springframework.core.codec.Encoder;
 import org.springframework.lang.Nullable;
@@ -47,7 +42,6 @@ import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.reactive.MessageMappingMessageHandler;
 import org.springframework.messaging.handler.invocation.reactive.HandlerMethodReturnValueHandler;
 import org.springframework.messaging.rsocket.ClientRSocketFactoryConfigurer;
-import org.springframework.messaging.rsocket.DefaultMetadataExtractor;
 import org.springframework.messaging.rsocket.MetadataExtractor;
 import org.springframework.messaging.rsocket.RSocketRequester;
 import org.springframework.messaging.rsocket.RSocketStrategies;
@@ -59,13 +53,18 @@ import org.springframework.util.RouteMatcher;
 import org.springframework.util.StringUtils;
 
 /**
- * Extension of {@link MessageMappingMessageHandler} to use as an RSocket
- * responder by handling incoming streams via {@code @MessageMapping} annotated
- * methods.
- * <p>Use {@link #clientResponder()} and {@link #serverResponder()} to obtain
- * {@link io.rsocket.RSocketFactory.ClientRSocketFactory#acceptor(Function) client} or
- * {@link io.rsocket.RSocketFactory.ServerRSocketFactory#acceptor(SocketAcceptor) server}
- * side adapters.
+ * Extension of {@link MessageMappingMessageHandler} for use in RSocket as a
+ * responder that handles requests with {@link ConnectMapping @ConnectMapping}
+ * and {@link MessageMapping @MessageMapping} methods.
+ * <p>For RSocket servers use {@link #serverResponder()} to obtain a
+ * {@link SocketAcceptor} to register with
+ * {@link io.rsocket.RSocketFactory.ServerRSocketFactory ServerRSocketFactory}.
+ * <p>For RSocket clients use {@link #clientResponder()} to obtain an adapter
+ * to register with
+ * {@link io.rsocket.RSocketFactory.ClientRSocketFactory ClientRSocketFactory},
+ * or use the static shortcut
+ * {@link #clientResponder(RSocketStrategies, Object...)} to obtain a configurer
+ * for {@link RSocketRequester.Builder#rsocketFactory}.
  *
  * @author Rossen Stoyanchev
  * @since 5.2
@@ -74,11 +73,9 @@ public class RSocketMessageHandler extends MessageMappingMessageHandler {
 
 	private final List<Encoder<?>> encoders = new ArrayList<>();
 
-	@Nullable
-	private RSocketStrategies rsocketStrategies;
-
-	@Nullable
 	private MetadataExtractor metadataExtractor;
+
+	private RSocketStrategies strategies;
 
 	@Nullable
 	private MimeType defaultDataMimeType;
@@ -87,37 +84,49 @@ public class RSocketMessageHandler extends MessageMappingMessageHandler {
 
 
 	public RSocketMessageHandler() {
-		this.encoders.add(CharSequenceEncoder.allMimeTypes());
-		this.encoders.add(new ByteBufferEncoder());
-		this.encoders.add(new ByteArrayEncoder());
-		this.encoders.add(new DataBufferEncoder());
+		setRSocketStrategies(RSocketStrategies.create());
 	}
-
 
 	/**
 	 * {@inheritDoc}
-	 * <p>If {@link #setRSocketStrategies(RSocketStrategies) rsocketStrategies}
-	 * is also set, this property is re-initialized with the decoders in it.
-	 * Or vice versa, if {@link #setRSocketStrategies(RSocketStrategies)
-	 * rsocketStrategies} is not set, it will be initialized from this and
-	 * other properties.
+	 * <p>When {@link #setRSocketStrategies(RSocketStrategies) rsocketStrategies}
+	 * is set, this property is re-initialized with the decoders in it, and
+	 * likewise when this property is set the {@code RSocketStrategies} are
+	 * mutated to change the decoders in them.
+	 * <p>By default this is set to the
+	 * {@link RSocketStrategies.Builder#decoder(Decoder[]) defaults} from
+	 * {@code RSocketStrategies}.
 	 */
 	@Override
 	public void setDecoders(List<? extends Decoder<?>> decoders) {
 		super.setDecoders(decoders);
+		this.strategies = this.strategies.mutate()
+				.decoders(list -> {
+					list.clear();
+					list.addAll(decoders);
+				})
+				.build();
 	}
 
 	/**
 	 * Configure the encoders to use for encoding handler method return values.
-	 * <p>If {@link #setRSocketStrategies(RSocketStrategies) rsocketStrategies}
-	 * is also set, this property is re-initialized with the encoders in it.
-	 * Or vice versa, if {@link #setRSocketStrategies(RSocketStrategies)
-	 * rsocketStrategies} is not set, it will be initialized from this and
-	 * other properties.
+	 * <p>When {@link #setRSocketStrategies(RSocketStrategies) rsocketStrategies}
+	 * is set, this property is re-initialized with the encoders in it, and
+	 * likewise when this property is set the {@code RSocketStrategies} are
+	 * mutated to change the encoders in it.
+	 * <p>By default this is set to the
+	 * {@link RSocketStrategies.Builder#encoder(Encoder[]) defaults} from
+	 * {@code RSocketStrategies}.
 	 */
 	public void setEncoders(List<? extends Encoder<?>> encoders) {
 		this.encoders.clear();
 		this.encoders.addAll(encoders);
+		this.strategies = this.strategies.mutate()
+				.encoders(list -> {
+					list.clear();
+					list.addAll(encoders);
+				})
+				.build();
 	}
 
 	/**
@@ -128,56 +137,52 @@ public class RSocketMessageHandler extends MessageMappingMessageHandler {
 	}
 
 	/**
-	 * Provide configuration in the form of {@link RSocketStrategies} instance
-	 * which can also be re-used to initialize a client-side
-	 * {@link RSocketRequester}.
-	 * <p>When this is set, in turn it sets the following:
-	 * <ul>
-	 * <li>{@link #setDecoders(List)}
-	 * <li>{@link #setEncoders(List)}
-	 * <li>{@link #setRouteMatcher(RouteMatcher)}
-	 * <li>{@link #setMetadataExtractor(MetadataExtractor)}
-	 * <li>{@link #setReactiveAdapterRegistry(ReactiveAdapterRegistry)}
-	 * </ul>
-	 * <p>By default if this is not set, it is initialized from the above.
+	 * {@inheritDoc}
+	 * <p>When {@link #setRSocketStrategies(RSocketStrategies) rsocketStrategies}
+	 * is set, this property is re-initialized with the route matcher in it, and
+	 * likewise when this property is set the {@code RSocketStrategies} are
+	 * mutated to change the matcher in it.
+	 * <p>By default this is set to the
+	 * {@link RSocketStrategies.Builder#routeMatcher(RouteMatcher) defaults}
+	 * from {@code RSocketStrategies}.
 	 */
-	public void setRSocketStrategies(RSocketStrategies rsocketStrategies) {
-		setDecoders(rsocketStrategies.decoders());
-		setEncoders(rsocketStrategies.encoders());
-		setRouteMatcher(rsocketStrategies.routeMatcher());
-		setMetadataExtractor(rsocketStrategies.metadataExtractor());
-		setReactiveAdapterRegistry(rsocketStrategies.reactiveAdapterRegistry());
+	@Override
+	public void setRouteMatcher(RouteMatcher routeMatcher) {
+		super.setRouteMatcher(routeMatcher);
+		this.strategies = this.strategies.mutate().routeMatcher(routeMatcher).build();
 	}
 
 	/**
-	 * Return an {@link RSocketStrategies} instance initialized from the
-	 * corresponding properties listed under {@link #setRSocketStrategies}.
+	 * Configure the registry for adapting various reactive types.
+	 * <p>When {@link #setRSocketStrategies(RSocketStrategies) rsocketStrategies}
+	 * is set, this property is re-initialized with the registry in it, and
+	 * likewise when this property is set the {@code RSocketStrategies} are
+	 * mutated to change the registry in it.
+	 * <p>By default this is set to the
+	 * {@link RSocketStrategies.Builder#reactiveAdapterStrategy(ReactiveAdapterRegistry) defaults}
+	 * from {@code RSocketStrategies}.
 	 */
-	public RSocketStrategies getRSocketStrategies() {
-		return this.rsocketStrategies != null ? this.rsocketStrategies : initRSocketStrategies();
-	}
-
-	private RSocketStrategies initRSocketStrategies() {
-		return RSocketStrategies.builder()
-				.decoders(List::clear)
-				.encoders(List::clear)
-				.decoders(decoders -> decoders.addAll(getDecoders()))
-				.encoders(encoders -> encoders.addAll(getEncoders()))
-				.routeMatcher(getRouteMatcher())
-				.metadataExtractor(getMetadataExtractor())
-				.reactiveAdapterStrategy(getReactiveAdapterRegistry())
-				.build();
+	@Override
+	public void setReactiveAdapterRegistry(ReactiveAdapterRegistry registry) {
+		super.setReactiveAdapterRegistry(registry);
+		this.strategies = this.strategies.mutate().reactiveAdapterStrategy(registry).build();
 	}
 
 	/**
 	 * Configure a {@link MetadataExtractor} to extract the route along with
 	 * other metadata.
-	 * <p>By default this is {@link DefaultMetadataExtractor} extracting a
-	 * route from {@code "message/x.rsocket.routing.v0"} or {@code "text/plain"}.
+	 * <p>When {@link #setRSocketStrategies(RSocketStrategies) rsocketStrategies}
+	 * is set, this property is re-initialized with the extractor in it, and
+	 * likewise when this property is set the {@code RSocketStrategies} are
+	 * mutated to change the extractor in it.
+	 * <p>By default this is set to the
+	 * {@link RSocketStrategies.Builder#metadataExtractor(MetadataExtractor)} defaults}
+	 * from {@code RSocketStrategies}.
 	 * @param extractor the extractor to use
 	 */
 	public void setMetadataExtractor(MetadataExtractor extractor) {
 		this.metadataExtractor = extractor;
+		this.strategies = this.strategies.mutate().metadataExtractor(this.metadataExtractor).build();
 	}
 
 	/**
@@ -187,6 +192,36 @@ public class RSocketMessageHandler extends MessageMappingMessageHandler {
 	@Nullable
 	public MetadataExtractor getMetadataExtractor() {
 		return this.metadataExtractor;
+	}
+
+	/**
+	 * Configure this handler through an {@link RSocketStrategies} instance which
+	 * can be re-used to initialize a client-side {@link RSocketRequester}.
+	 * <p>When this property is set, in turn it sets the following:
+	 * <ul>
+	 * <li>{@link #setDecoders(List)}
+	 * <li>{@link #setEncoders(List)}
+	 * <li>{@link #setRouteMatcher(RouteMatcher)}
+	 * <li>{@link #setMetadataExtractor(MetadataExtractor)}
+	 * <li>{@link #setReactiveAdapterRegistry(ReactiveAdapterRegistry)}
+	 * </ul>
+	 * <p>By default this is set to {@link RSocketStrategies#create()} which in
+	 * turn sets default settings for all related properties.
+	 */
+	public void setRSocketStrategies(RSocketStrategies rsocketStrategies) {
+		this.strategies = rsocketStrategies;
+		setDecoders(this.strategies.decoders());
+		setEncoders(this.strategies.encoders());
+		setRouteMatcher(this.strategies.routeMatcher());
+		setMetadataExtractor(this.strategies.metadataExtractor());
+		setReactiveAdapterRegistry(this.strategies.reactiveAdapterRegistry());
+	}
+
+	/**
+	 * Return the {@link #setRSocketStrategies configured} {@code RSocketStrategies}.
+	 */
+	public RSocketStrategies getRSocketStrategies() {
+		return this.strategies;
 	}
 
 	/**
@@ -235,14 +270,6 @@ public class RSocketMessageHandler extends MessageMappingMessageHandler {
 		getArgumentResolverConfigurer().addCustomResolver(new RSocketRequesterMethodArgumentResolver());
 
 		super.afterPropertiesSet();
-
-		if (getMetadataExtractor() == null) {
-			DefaultMetadataExtractor extractor = new DefaultMetadataExtractor();
-			extractor.metadataToExtract(MimeTypeUtils.TEXT_PLAIN, String.class, MetadataExtractor.ROUTE_KEY);
-			setMetadataExtractor(extractor);
-		}
-
-		this.rsocketStrategies = initRSocketStrategies();
 	}
 
 	@Override
@@ -299,7 +326,7 @@ public class RSocketMessageHandler extends MessageMappingMessageHandler {
 	 * and return {@code Mono<Void>} with an error signal preventing the
 	 * connection. Such a method can also start requests to the client but that
 	 * must be done decoupled from handling and from the current thread.
-	 * <p>Subsequent stream requests can be handled with
+	 * <p>Subsequent requests on the connection can be handled with
 	 * {@link MessageMapping MessageMapping} methods.
 	 */
 	public SocketAcceptor serverResponder() {
@@ -316,18 +343,15 @@ public class RSocketMessageHandler extends MessageMappingMessageHandler {
 	}
 
 	/**
-	 * Return an adapter for a client side
-	 * {@link io.rsocket.RSocketFactory.ClientRSocketFactory#acceptor(BiFunction)
-	 * acceptor} that delegate to this {@link RSocketMessageHandler} for
-	 * handling.
-	 * <p>The initial {@link ConnectionSetupPayload} can be processed with a
-	 * {@link ConnectMapping @ConnectionMapping} method but, unlike the
-	 * server side, such a method is merely a callback and cannot prevent the
-	 * connection unless the method throws an error immediately. Such a method
-	 * can also start requests to the server but must do so decoupled from
-	 * handling and from the current thread.
-	 * <p>Subsequent stream requests can be handled with
-	 * {@link MessageMapping MessageMapping} methods.
+	 * Return an adapter for a client side responder that can be used to set
+	 * {@link io.rsocket.RSocketFactory.ClientRSocketFactory#acceptor(Function)}.
+	 * The responder delegates requests to this {@code RSocketMessageHandler}
+	 * for handling via {@code @MessageMapping} methods.
+	 * <p>The initial {@link ConnectionSetupPayload} can be accessed through a
+	 * {@link ConnectMapping @ConnectionMapping} method, but such a method is
+	 * only a callback just before the connection is made and cannot "accept"
+	 * or prevent the connection. Such a method can also start requests to the
+	 * server but must do so decoupled from handling and the current thread.
 	 */
 	public BiFunction<ConnectionSetupPayload, RSocket, RSocket> clientResponder() {
 		return (setupPayload, sendingRSocket) -> {
@@ -347,18 +371,13 @@ public class RSocketMessageHandler extends MessageMappingMessageHandler {
 		MimeType metaMimeType = StringUtils.hasText(s) ? MimeTypeUtils.parseMimeType(s) : this.defaultMetadataMimeType;
 		Assert.notNull(metaMimeType, "No `metadataMimeType` in ConnectionSetupPayload and no default value");
 
-		RSocketStrategies strategies = this.rsocketStrategies;
-		Assert.notNull(strategies, "No RSocketStrategies. Was afterPropertiesSet not called?");
-		RSocketRequester requester = RSocketRequester.wrap(rsocket, dataMimeType, metaMimeType, strategies);
+		RSocketRequester requester = RSocketRequester.wrap(
+				rsocket, dataMimeType, metaMimeType, this.strategies);
 
-		Assert.state(this.metadataExtractor != null,
-				() -> "No MetadataExtractor. Was afterPropertiesSet not called?");
+		Assert.state(getRouteMatcher() != null, () -> "No RouteMatcher. Was afterPropertiesSet not called?");
 
-		Assert.state(getRouteMatcher() != null,
-				() -> "No RouteMatcher. Was afterPropertiesSet not called?");
-
-		return new MessagingRSocket(dataMimeType, metaMimeType, this.metadataExtractor, requester,
-				this, getRouteMatcher(), strategies);
+		return new MessagingRSocket(dataMimeType, metaMimeType, this.metadataExtractor,
+				requester, this, getRouteMatcher(), this.strategies);
 	}
 
 	private boolean isDataMimeTypeSupported(MimeType dataMimeType) {
@@ -372,39 +391,39 @@ public class RSocketMessageHandler extends MessageMappingMessageHandler {
 		return false;
 	}
 
-	public static ClientRSocketFactoryConfigurer clientResponder(Object... handlers) {
-		return new ResponderConfigurer(handlers);
-	}
+	/**
+	 * Static factory method for a configurer of a client side responder with
+	 * annotated handler methods. This is intended to be passed into
+	 * {@link RSocketRequester.Builder#rsocketFactory(ClientRSocketFactoryConfigurer)}.
+	 * <p>In effect a shortcut to create and initialize
+	 * {@code RSocketMessageHandler} with the given strategies and handlers,
+	 * and use {@link #clientResponder()} to obtain the responder.
+	 * For more advanced scenarios, e.g. discovering handlers through a custom
+	 * stereotype annotation, consider declaring {@code RSocketMessageHandler}
+	 * as a bean, and then obtain the responder from it.
+	 * @param strategies the strategies to set on the created
+	 * {@code RSocketMessageHandler}
+	 * @param candidateHandlers a list of Objects and/or Classes with annotated
+	 * handler methods; used to call {@link #setHandlers(List)} with
+	 * on the created {@code RSocketMessageHandler}
+	 * @return a configurer that may be passed into
+	 * {@link RSocketRequester.Builder#rsocketFactory(ClientRSocketFactoryConfigurer)}
+	 */
+	public static ClientRSocketFactoryConfigurer clientResponder(
+			RSocketStrategies strategies, Object... candidateHandlers) {
 
-
-	private static final class ResponderConfigurer implements ClientRSocketFactoryConfigurer {
-
-		private final List<Object> handlers = new ArrayList<>();
-
-		@Nullable
-		private RSocketStrategies strategies;
-
-
-		private ResponderConfigurer(Object... handlers) {
-			Assert.notEmpty(handlers, "No handlers");
-			for (Object obj : handlers) {
-				this.handlers.add(obj instanceof Class ? BeanUtils.instantiateClass((Class<?>) obj) : obj);
-			}
+		Assert.notEmpty(candidateHandlers, "No handlers");
+		List<Object> handlers = new ArrayList<>(candidateHandlers.length);
+		for (Object obj : candidateHandlers) {
+			handlers.add(obj instanceof Class ? BeanUtils.instantiateClass((Class<?>) obj) : obj);
 		}
 
-		@Override
-		public void configureWithStrategies(RSocketStrategies strategies) {
-			this.strategies = strategies;
-		}
-
-		@Override
-		public void configure(RSocketFactory.ClientRSocketFactory factory) {
+		return rsocketFactory -> {
 			RSocketMessageHandler handler = new RSocketMessageHandler();
-			handler.setHandlers(this.handlers);
-			handler.setRSocketStrategies(this.strategies);
+			handler.setHandlers(handlers);
+			handler.setRSocketStrategies(strategies);
 			handler.afterPropertiesSet();
-			factory.acceptor(handler.clientResponder());
-		}
+			rsocketFactory.acceptor(handler.clientResponder());
+		};
 	}
-
 }

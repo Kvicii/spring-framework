@@ -39,12 +39,11 @@ import org.springframework.core.io.buffer.DataBufferFactory;
 import org.springframework.core.io.buffer.NettyDataBufferFactory;
 import org.springframework.lang.Nullable;
 import org.springframework.util.AntPathMatcher;
-import org.springframework.util.MimeTypeUtils;
 import org.springframework.util.RouteMatcher;
 import org.springframework.util.SimpleRouteMatcher;
 
 /**
- * Default, package-private {@link RSocketStrategies} implementation.
+ * Default implementation of {@link RSocketStrategies}.
  *
  * @author Rossen Stoyanchev
  * @since 5.2
@@ -109,7 +108,7 @@ final class DefaultRSocketStrategies implements RSocketStrategies {
 
 
 	/**
-	 * Default RSocketStrategies.Builder implementation.
+	 * Default implementation of {@link RSocketStrategies.Builder}.
 	 */
 	static class DefaultRSocketStrategiesBuilder implements RSocketStrategies.Builder {
 
@@ -206,32 +205,26 @@ final class DefaultRSocketStrategies implements RSocketStrategies {
 
 		@Override
 		public RSocketStrategies build() {
+
+			RouteMatcher matcher = this.routeMatcher != null ? this.routeMatcher : initRouteMatcher();
+
+			MetadataExtractor extractor = this.metadataExtractor != null ?
+					this.metadataExtractor : new DefaultMetadataExtractor(this.decoders);
+
+			DataBufferFactory factory = this.bufferFactory != null ?
+					this.bufferFactory : new NettyDataBufferFactory(PooledByteBufAllocator.DEFAULT);
+
+			ReactiveAdapterRegistry registry = this.adapterRegistry != null ?
+					this.adapterRegistry : ReactiveAdapterRegistry.getSharedInstance();
+
 			return new DefaultRSocketStrategies(
-					this.encoders, this.decoders,
-					this.routeMatcher != null ? this.routeMatcher : initRouteMatcher(),
-					this.metadataExtractor != null ? this.metadataExtractor : initMetadataExtractor(),
-					this.bufferFactory != null ? this.bufferFactory : initBufferFactory(),
-					this.adapterRegistry != null ? this.adapterRegistry : initReactiveAdapterRegistry());
+					this.encoders, this.decoders, matcher, extractor, factory, registry);
 		}
 
 		private RouteMatcher initRouteMatcher() {
 			AntPathMatcher pathMatcher = new AntPathMatcher();
 			pathMatcher.setPathSeparator(".");
 			return new SimpleRouteMatcher(pathMatcher);
-		}
-
-		private MetadataExtractor initMetadataExtractor() {
-			DefaultMetadataExtractor extractor = new DefaultMetadataExtractor();
-			extractor.metadataToExtract(MimeTypeUtils.TEXT_PLAIN, String.class, MetadataExtractor.ROUTE_KEY);
-			return extractor;
-		}
-
-		private DataBufferFactory initBufferFactory() {
-			return new NettyDataBufferFactory(PooledByteBufAllocator.DEFAULT);
-		}
-
-		private ReactiveAdapterRegistry initReactiveAdapterRegistry() {
-			return ReactiveAdapterRegistry.getSharedInstance();
 		}
 	}
 
