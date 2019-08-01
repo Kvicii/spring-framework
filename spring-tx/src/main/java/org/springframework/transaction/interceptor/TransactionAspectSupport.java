@@ -315,6 +315,8 @@ public abstract class TransactionAspectSupport implements BeanFactoryAware, Init
 	 * General delegate for around-advice-based subclasses, delegating to several other template
 	 * methods on this class. Able to handle {@link CallbackPreferringPlatformTransactionManager}
 	 * as well as regular {@link PlatformTransactionManager} implementations.
+	 * <p>
+	 * 事务切面的具体实现 关注的是TransactionInfo(事务信息的信息很全面 包含TransactionStatus/TransactionAttribute/PlatformTransactionManager以及前一次的TransactionInfo)
 	 *
 	 * @param method      the Method being invoked
 	 * @param targetClass the target class that we're invoking the method on
@@ -341,6 +343,11 @@ public abstract class TransactionAspectSupport implements BeanFactoryAware, Init
 
 		if (txAttr == null || !(tm instanceof CallbackPreferringPlatformTransactionManager)) {
 			// Standard transaction demarcation with getTransaction and commit/rollback calls.
+			/**
+			 * 创建事务并拿到一个TransactionInfo
+			 * 如果发生了异常根据TransactionInfo中的TransactionAttribute配置的rollback规则判断是否需要回滚 不需要则尝试提交 需要则尝试回滚
+			 * 如果未发生异常则尝试提交
+			 */
 			TransactionInfo txInfo = createTransactionIfNecessary(tm, txAttr, joinpointIdentification);
 
 			Object retVal;
@@ -662,6 +669,7 @@ public abstract class TransactionAspectSupport implements BeanFactoryAware, Init
 	/**
 	 * Opaque object used to hold transaction information. Subclasses
 	 * must pass it back to methods on this class, but not see its internals.
+	 * 事务信息 包含事务管理器、事务属性、事务状态
 	 */
 	protected static final class TransactionInfo {
 
