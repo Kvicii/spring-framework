@@ -108,6 +108,7 @@ public abstract class TransactionAspectSupport implements BeanFactoryAware, Init
 	 * and to support communication between different cooperating advices
 	 * (e.g. before and after advice) if the aspect involves more than a
 	 * single method (as will be the case for around advice).
+	 * 用于把TransactionInfo绑定到线程 在其他业务代码或页面中能拿到信息-->拿到TransactionStatus-->控制事务提交回滚
 	 */
 	private static final ThreadLocal<TransactionInfo> transactionInfoHolder =
 			new NamedThreadLocal<>("Current aspect-driven transaction");

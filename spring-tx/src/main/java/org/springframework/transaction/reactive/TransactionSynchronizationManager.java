@@ -61,7 +61,6 @@ import java.util.Set;
  * <p>Synchronization is for example used to always return the same resources within
  * a transaction, e.g. a database connection for any given connection factory.
  *
- * 事务同步管理器 维护当前线程事务资源、信息以及事务同步回调(TransactionSynchronization)集合
  * @author Mark Paluch
  * @author Juergen Hoeller
  * @see #isSynchronizationActive

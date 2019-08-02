@@ -16,6 +16,13 @@
 
 package org.springframework.transaction.support;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.springframework.core.NamedThreadLocal;
+import org.springframework.core.annotation.AnnotationAwareOrderComparator;
+import org.springframework.lang.Nullable;
+import org.springframework.util.Assert;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -23,14 +30,6 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-
-import org.springframework.core.NamedThreadLocal;
-import org.springframework.core.annotation.AnnotationAwareOrderComparator;
-import org.springframework.lang.Nullable;
-import org.springframework.util.Assert;
 
 /**
  * Central delegate that manages resources and transaction synchronizations per thread.
@@ -63,6 +62,8 @@ import org.springframework.util.Assert;
  * <p>Synchronization is for example used to always return the same resources
  * within a JTA transaction, e.g. a JDBC Connection or a Hibernate Session for
  * any given DataSource or SessionFactory, respectively.
+ * <p>
+ * 事务同步管理器 维护当前线程事务资源、信息以及事务同步回调(TransactionSynchronization)集合
  *
  * @author Juergen Hoeller
  * @see #isSynchronizationActive
@@ -78,21 +79,41 @@ public abstract class TransactionSynchronizationManager {
 
 	private static final Log logger = LogFactory.getLog(TransactionSynchronizationManager.class);
 
+	/**
+	 * 保存事务相关资源
+	 * 如DataSourceTransactionManager会在开启物理事务时把<DataSource, ConnectionHolder>绑定到线程
+	 * 这样在事务作用的代码中可以通过spring的DataSourceUtils拿到绑定到线程的ConnectionHolder中的Connection
+	 */
 	private static final ThreadLocal<Map<Object, Object>> resources =
 			new NamedThreadLocal<>("Transactional resources");
 
+	/**
+	 * 用于保存transaction synchronization(回调钩子对象) 内部含有beforeCommit/afterCommit/beforeCompletion
+	 */
 	private static final ThreadLocal<Set<TransactionSynchronization>> synchronizations =
 			new NamedThreadLocal<>("Transaction synchronizations");
 
+	/**
+	 * 当前事务名
+	 */
 	private static final ThreadLocal<String> currentTransactionName =
 			new NamedThreadLocal<>("Current transaction name");
 
+	/**
+	 * 当前事务是否只读
+	 */
 	private static final ThreadLocal<Boolean> currentTransactionReadOnly =
 			new NamedThreadLocal<>("Current transaction read-only status");
 
+	/**
+	 * 当前事务隔离级别
+	 */
 	private static final ThreadLocal<Integer> currentTransactionIsolationLevel =
 			new NamedThreadLocal<>("Current transaction isolation level");
 
+	/**
+	 * 是否存在物理事务 如传播行为为NOT_SUPPORTED时值为false
+	 */
 	private static final ThreadLocal<Boolean> actualTransactionActive =
 			new NamedThreadLocal<>("Actual transaction active");
 
