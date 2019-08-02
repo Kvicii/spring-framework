@@ -60,6 +60,9 @@ public class RootBeanDefinition extends AbstractBeanDefinition {
 	@Nullable
 	private AnnotatedElement qualifiedElement;
 
+	/** Determines if the definition needs to be re-merged. */
+	volatile boolean stale;
+
 	boolean allowCaching = true;
 
 	boolean isFactoryMethodUnique = false;
@@ -70,6 +73,10 @@ public class RootBeanDefinition extends AbstractBeanDefinition {
 	/** Package-visible field for caching the determined Class of a given bean definition. */
 	@Nullable
 	volatile Class<?> resolvedTargetType;
+
+	/** Package-visible field for caching if the bean is a factory bean. */
+	@Nullable
+	volatile Boolean isFactoryBean;
 
 	/** Package-visible field for caching the return type of a generically typed factory method. */
 	@Nullable
