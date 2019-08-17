@@ -21,11 +21,10 @@ import java.util.Optional;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import org.springframework.core.DefaultParameterNameDiscoverer;
-import org.springframework.core.GenericTypeResolver;
 import org.springframework.core.MethodParameter;
 import org.springframework.core.annotation.SynthesizingMethodParameter;
 import org.springframework.core.convert.support.DefaultConversionService;
@@ -62,7 +61,7 @@ public abstract class AbstractRequestAttributesArgumentResolverTests {
 	private Method handleMethod;
 
 
-	@Before
+	@BeforeEach
 	public void setup() throws Exception {
 		HttpServletRequest request = new MockHttpServletRequest();
 		HttpServletResponse response = new MockHttpServletResponse();
@@ -153,8 +152,7 @@ public abstract class AbstractRequestAttributesArgumentResolverTests {
 	private MethodParameter initMethodParameter(int parameterIndex) {
 		MethodParameter param = new SynthesizingMethodParameter(this.handleMethod, parameterIndex);
 		param.initParameterNameDiscovery(new DefaultParameterNameDiscoverer());
-		GenericTypeResolver.resolveParameterType(param, this.resolver.getClass());
-		return param;
+		return param.withContainingClass(this.resolver.getClass());
 	}
 
 

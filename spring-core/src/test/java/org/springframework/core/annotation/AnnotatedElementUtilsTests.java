@@ -34,9 +34,8 @@ import javax.annotation.ParametersAreNonnullByDefault;
 import javax.annotation.Resource;
 import javax.annotation.meta.When;
 
-import org.junit.Ignore;
-import org.junit.Test;
-import org.junit.internal.ArrayComparisonFailure;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 
 import org.springframework.core.annotation.AnnotationUtilsTests.ExtendsBaseClassWithGenericAnnotatedMethod;
 import org.springframework.core.annotation.AnnotationUtilsTests.ImplementsInterfaceWithGenericAnnotatedMethod;
@@ -385,7 +384,7 @@ public class AnnotatedElementUtilsTests {
 	 * the first test class or the second one (with different exceptions), depending
 	 * on the order in which the JVM returns the attribute methods via reflection.
 	 */
-	@Ignore("Permanently disabled but left in place for illustrative purposes")
+	@Disabled("Permanently disabled but left in place for illustrative purposes")
 	@Test
 	public void getMergedAnnotationAttributesWithHalfConventionBasedAndHalfAliasedComposedAnnotation() {
 		for (Class<?> clazz : asList(HalfConventionBasedAndHalfAliasedComposedContextConfigClassV1.class,
@@ -754,7 +753,7 @@ public class AnnotatedElementUtilsTests {
 		assertWebMapping(WebController.class.getMethod("getMappedWithPathAttribute"));
 	}
 
-	private void assertWebMapping(AnnotatedElement element) throws ArrayComparisonFailure {
+	private void assertWebMapping(AnnotatedElement element) {
 		WebMapping webMapping = findMergedAnnotation(element, WebMapping.class);
 		assertThat(webMapping).isNotNull();
 		assertThat(webMapping.value()).as("value attribute: ").isEqualTo(asArray("/test"));
