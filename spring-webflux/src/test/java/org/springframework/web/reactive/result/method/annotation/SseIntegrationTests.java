@@ -16,7 +16,6 @@
 
 package org.springframework.web.reactive.result.method.annotation;
 
-import java.io.File;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -65,20 +64,19 @@ class SseIntegrationTests extends AbstractHttpHandlerIntegrationTests {
 
 	@Retention(RetentionPolicy.RUNTIME)
 	@Target(ElementType.METHOD)
-	@ParameterizedTest(name = "server [{0}] webClient [{1}]")
+	@ParameterizedTest(name = "[{index}] server [{0}], webClient [{1}]")
 	@MethodSource("arguments")
 	protected @interface ParameterizedSseTest {
 	}
 
 	static Object[][] arguments() {
-		File base = new File(System.getProperty("java.io.tmpdir"));
 		return new Object[][] {
 			{new JettyHttpServer(), new ReactorClientHttpConnector()},
 			{new JettyHttpServer(), new JettyClientHttpConnector()},
 			{new ReactorHttpServer(), new ReactorClientHttpConnector()},
 			{new ReactorHttpServer(), new JettyClientHttpConnector()},
-			{new TomcatHttpServer(base.getAbsolutePath()), new ReactorClientHttpConnector()},
-			{new TomcatHttpServer(base.getAbsolutePath()), new JettyClientHttpConnector()},
+			{new TomcatHttpServer(), new ReactorClientHttpConnector()},
+			{new TomcatHttpServer(), new JettyClientHttpConnector()},
 			{new UndertowHttpServer(), new ReactorClientHttpConnector()},
 			{new UndertowHttpServer(), new JettyClientHttpConnector()}
 		};
@@ -143,9 +141,9 @@ class SseIntegrationTests extends AbstractHttpHandlerIntegrationTests {
 
 	@ParameterizedSseTest
 	void sseAsEvent(HttpServer httpServer, ClientHttpConnector connector) throws Exception {
-		startServer(httpServer, connector);
+		assumeTrue(httpServer instanceof JettyHttpServer);
 
-		assumeTrue(super.server instanceof JettyHttpServer);
+		startServer(httpServer, connector);
 
 		Flux<ServerSentEvent<Person>> result = this.webClient.get()
 				.uri("/event")
@@ -192,9 +190,9 @@ class SseIntegrationTests extends AbstractHttpHandlerIntegrationTests {
 	@ParameterizedSseTest // SPR-16494
 	@Disabled // https://github.com/reactor/reactor-netty/issues/283
 	void serverDetectsClientDisconnect(HttpServer httpServer, ClientHttpConnector connector) throws Exception {
-		startServer(httpServer, connector);
+		assumeTrue(httpServer instanceof ReactorHttpServer);
 
-		assumeTrue(super.server instanceof ReactorHttpServer);
+		startServer(httpServer, connector);
 
 		Flux<String> result = this.webClient.get()
 				.uri("/infinite")

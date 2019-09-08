@@ -18,6 +18,7 @@ package org.springframework.aop.framework;
 
 import java.util.ArrayList;
 import java.util.List;
+
 import javax.accessibility.Accessible;
 import javax.swing.JFrame;
 import javax.swing.RootPaneContainer;
@@ -170,11 +171,8 @@ public class ProxyFactoryTests {
 
 	@Test
 	public void testAddRepeatedInterface() {
-		TimeStamped tst = new TimeStamped() {
-			@Override
-			public long getTimeStamp() {
-				throw new UnsupportedOperationException("getTimeStamp");
-			}
+		TimeStamped tst = () -> {
+			throw new UnsupportedOperationException("getTimeStamp");
 		};
 		ProxyFactory pf = new ProxyFactory(tst);
 		// We've already implicitly added this interface.

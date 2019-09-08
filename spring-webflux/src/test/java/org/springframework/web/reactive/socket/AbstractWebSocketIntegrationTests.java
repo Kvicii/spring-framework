@@ -26,6 +26,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.stream.Stream;
 
 import org.apache.tomcat.websocket.server.WsContextListener;
 import org.junit.jupiter.api.AfterEach;
@@ -34,6 +35,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 import org.xnio.OptionMap;
 import org.xnio.Xnio;
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 import reactor.util.function.Tuple3;
 
 import org.springframework.context.ApplicationContext;
@@ -72,18 +74,18 @@ import org.springframework.web.server.adapter.WebHttpHandlerBuilder;
  * @author Sam Brannen
  */
 @SuppressWarnings({"unused", "WeakerAccess"})
-public abstract class AbstractWebSocketIntegrationTests {
+abstract class AbstractWebSocketIntegrationTests {
 
 	private static final File TMP_DIR = new File(System.getProperty("java.io.tmpdir"));
 
 	@Retention(RetentionPolicy.RUNTIME)
 	@Target(ElementType.METHOD)
-	@ParameterizedTest(name = "client[{0}] - server [{1}]")
+	@ParameterizedTest(name = "[{index}] client[{0}], server[{1}]")
 	@MethodSource("arguments")
 	@interface ParameterizedWebSocketTest {
 	}
 
-	static Object[][] arguments() throws IOException {
+	static Stream<Object[]> arguments() throws IOException {
 
 		WebSocketClient[] clients = new WebSocketClient[] {
 				new TomcatWebSocketClient(),
@@ -98,12 +100,18 @@ public abstract class AbstractWebSocketIntegrationTests {
 		servers.put(new ReactorHttpServer(), ReactorNettyConfig.class);
 		servers.put(new UndertowHttpServer(), UndertowConfig.class);
 
-		Flux<WebSocketClient> f1 = Flux.fromArray(clients).concatMap(c -> Flux.just(c).repeat(servers.size()));
-		Flux<HttpServer> f2 = Flux.fromIterable(servers.keySet()).repeat(clients.length);
-		Flux<Class<?>> f3 = Flux.fromIterable(servers.values()).repeat(clients.length);
+		// Try each client once against each server..
 
-		return Flux.zip(f1, f2, f3).map(Tuple3::toArray).collectList().block()
-				.toArray(new Object[clients.length * servers.size()][2]);
+		Flux<WebSocketClient> f1 = Flux.fromArray(clients)
+				.concatMap(c -> Mono.just(c).repeat(servers.size() - 1));
+
+		Flux<Map.Entry<HttpServer, Class<?>>> f2 = Flux.fromIterable(servers.entrySet())
+				.repeat(clients.length - 1)
+				.share();
+
+		return Flux.zip(f1, f2.map(Map.Entry::getKey), f2.map(Map.Entry::getValue))
+				.map(Tuple3::toArray)
+				.toStream();
 	}
 
 

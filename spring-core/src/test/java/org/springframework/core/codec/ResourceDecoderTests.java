@@ -37,14 +37,14 @@ import static org.springframework.core.ResolvableType.forClass;
 /**
  * @author Arjen Poutsma
  */
-public class ResourceDecoderTests extends AbstractDecoderTestCase<ResourceDecoder> {
+class ResourceDecoderTests extends AbstractDecoderTestCase<ResourceDecoder> {
 
 	private final byte[] fooBytes = "foo".getBytes(StandardCharsets.UTF_8);
 
 	private final byte[] barBytes = "bar".getBytes(StandardCharsets.UTF_8);
 
 
-	public ResourceDecoderTests() {
+	ResourceDecoderTests() {
 		super(new ResourceDecoder());
 	}
 
@@ -79,6 +79,7 @@ public class ResourceDecoderTests extends AbstractDecoderTestCase<ResourceDecode
 	}
 
 	@Override
+	@Test
 	public void decodeToMono() {
 		Flux<DataBuffer> input = Flux.concat(
 				dataBuffer(this.fooBytes),

@@ -19,6 +19,7 @@ package org.springframework.jms.config;
 import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
+
 import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.jms.MessageListener;
@@ -166,6 +167,7 @@ public class JmsListenerContainerFactoryIntegrationTests {
 
 		private final Map<String, Boolean> invocations = new HashMap<>();
 
+		@Override
 		public void handleIt(@Payload String msg, @Header("my-header") String myHeader) {
 			invocations.put("handleIt", true);
 			assertThat(msg).as("Unexpected payload message").isEqualTo("FOO-BAR");

@@ -22,7 +22,7 @@ import io.mockk.verify
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.runBlocking
-import org.junit.jupiter.api.Assertions.assertEquals
+import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.reactivestreams.Publisher
 import org.springframework.core.ParameterizedTypeReference
@@ -43,23 +43,23 @@ class WebClientExtensionsTests {
 
 
 	@Test
-	fun `RequestBodySpec#bodyWithType with Publisher and reified type parameters`() {
+	fun `RequestBodySpec#body with Publisher and reified type parameters`() {
 		val body = mockk<Publisher<List<Foo>>>()
-		requestBodySpec.bodyWithType(body)
+		requestBodySpec.body(body)
 		verify { requestBodySpec.body(body, object : ParameterizedTypeReference<List<Foo>>() {}) }
 	}
 
 	@Test
 	fun `RequestBodySpec#body with Flow and reified type parameters`() {
 		val body = mockk<Flow<List<Foo>>>()
-		requestBodySpec.bodyWithType(body)
+		requestBodySpec.body(body)
 		verify { requestBodySpec.body(ofType<Any>(), object : ParameterizedTypeReference<List<Foo>>() {}) }
 	}
 
 	@Test
 	fun `RequestBodySpec#body with CompletableFuture and reified type parameters`() {
 		val body = mockk<CompletableFuture<List<Foo>>>()
-		requestBodySpec.bodyWithType<List<Foo>>(body)
+		requestBodySpec.body<List<Foo>>(body)
 		verify { requestBodySpec.body(ofType<Any>(), object : ParameterizedTypeReference<List<Foo>>() {}) }
 	}
 
@@ -86,7 +86,7 @@ class WebClientExtensionsTests {
 		val response = mockk<ClientResponse>()
 		every { requestBodySpec.exchange() } returns Mono.just(response)
 		runBlocking {
-			assertEquals(response, requestBodySpec.awaitExchange())
+			assertThat(requestBodySpec.awaitExchange()).isEqualTo(response)
 		}
 	}
 
@@ -95,7 +95,7 @@ class WebClientExtensionsTests {
 		val spec = mockk<WebClient.ResponseSpec>()
 		every { spec.bodyToMono<String>() } returns Mono.just("foo")
 		runBlocking {
-			assertEquals("foo", spec.awaitBody<String>())
+			assertThat(spec.awaitBody<String>()).isEqualTo("foo")
 		}
 	}
 

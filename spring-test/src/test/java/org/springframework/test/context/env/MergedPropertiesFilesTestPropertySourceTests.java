@@ -31,7 +31,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  */
 @TestPropertySource("extended.properties")
 class MergedPropertiesFilesTestPropertySourceTests extends
-		ExplicitPropertiesFileTestPropertySourceTests {
+		ExplicitPropertiesFileInClasspathTestPropertySourceTests {
 
 	@Test
 	void verifyExtendedPropertiesAreAvailableInEnvironment() {

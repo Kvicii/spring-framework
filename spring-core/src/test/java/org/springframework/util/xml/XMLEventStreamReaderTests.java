@@ -18,6 +18,7 @@ package org.springframework.util.xml;
 
 import java.io.StringReader;
 import java.io.StringWriter;
+
 import javax.xml.stream.XMLEventReader;
 import javax.xml.stream.XMLInputFactory;
 import javax.xml.transform.Transformer;
@@ -34,7 +35,7 @@ import org.springframework.tests.XmlContent;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class XMLEventStreamReaderTests {
+class XMLEventStreamReaderTests {
 
 	private static final String XML =
 			"<?pi content?><root xmlns='namespace'><prefix:child xmlns:prefix='namespace2'>content</prefix:child></root>"
@@ -43,21 +44,21 @@ public class XMLEventStreamReaderTests {
 	private XMLEventStreamReader streamReader;
 
 	@BeforeEach
-	public void createStreamReader() throws Exception {
+	void createStreamReader() throws Exception {
 		XMLInputFactory inputFactory = XMLInputFactory.newInstance();
 		XMLEventReader eventReader = inputFactory.createXMLEventReader(new StringReader(XML));
 		streamReader = new XMLEventStreamReader(eventReader);
 	}
 
 	@Test
-	public void readAll() throws Exception {
+	void readAll() throws Exception {
 		while (streamReader.hasNext()) {
 			streamReader.next();
 		}
 	}
 
 	@Test
-	public void readCorrect() throws Exception {
+	void readCorrect() throws Exception {
 		Transformer transformer = TransformerFactory.newInstance().newTransformer();
 		StAXSource source = new StAXSource(streamReader);
 		StringWriter writer = new StringWriter();

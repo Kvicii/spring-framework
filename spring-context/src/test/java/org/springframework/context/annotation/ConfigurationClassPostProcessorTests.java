@@ -23,6 +23,7 @@ import java.lang.annotation.Target;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+
 import javax.annotation.PostConstruct;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -1281,6 +1282,7 @@ public class ConfigurationClassPostProcessorTests {
 
 	public interface RepositoryInterface<T> {
 
+		@Override
 		String toString();
 	}
 

@@ -16,7 +16,6 @@
 
 package org.springframework.http.server.reactive;
 
-import java.io.File;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -91,8 +90,10 @@ public abstract class AbstractHttpHandlerIntegrationTests {
 
 	@AfterEach
 	void stopServer() {
-		this.server.stop();
-		this.port = 0;
+		if (this.server != null) {
+			this.server.stop();
+			this.port = 0;
+		}
 	}
 
 
@@ -118,18 +119,17 @@ public abstract class AbstractHttpHandlerIntegrationTests {
 
 	@Retention(RetentionPolicy.RUNTIME)
 	@Target(ElementType.METHOD)
-	@ParameterizedTest(name = "{0}")
+	@ParameterizedTest(name = "[{index}] {0}")
 	@MethodSource("org.springframework.http.server.reactive.AbstractHttpHandlerIntegrationTests#httpServers()")
 	// public for Kotlin
 	public @interface ParameterizedHttpServerTest {
 	}
 
 	static Stream<HttpServer> httpServers() {
-		File base = new File(System.getProperty("java.io.tmpdir"));
 		return Stream.of(
 				new JettyHttpServer(),
 				new ReactorHttpServer(),
-				new TomcatHttpServer(base.getAbsolutePath()),
+				new TomcatHttpServer(),
 				new UndertowHttpServer()
 		);
 	}

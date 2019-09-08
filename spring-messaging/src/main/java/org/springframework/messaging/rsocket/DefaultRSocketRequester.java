@@ -18,6 +18,7 @@ package org.springframework.messaging.rsocket;
 
 import java.util.Collections;
 import java.util.Map;
+import java.util.function.Consumer;
 
 import io.rsocket.Payload;
 import io.rsocket.RSocket;
@@ -134,6 +135,12 @@ final class DefaultRSocketRequester implements RSocketRequester {
 		}
 
 		@Override
+		public RequestSpec metadata(Consumer<RequestSpec> configurer) {
+			configurer.accept(this);
+			return this;
+		}
+
+		@Override
 		public ResponseSpec data(Object data) {
 			Assert.notNull(data, "'data' must not be null");
 			return toResponseSpec(data, ResolvableType.NONE);
@@ -215,9 +222,6 @@ final class DefaultRSocketRequester implements RSocketRequester {
 
 		@SuppressWarnings("unchecked")
 		private <T> DataBuffer encodeData(T value, ResolvableType elementType, @Nullable Encoder<?> encoder) {
-			if (value instanceof DataBuffer) {
-				return (DataBuffer) value;
-			}
 			if (encoder == null) {
 				elementType = ResolvableType.forInstance(value);
 				encoder = strategies.encoder(elementType, dataMimeType);

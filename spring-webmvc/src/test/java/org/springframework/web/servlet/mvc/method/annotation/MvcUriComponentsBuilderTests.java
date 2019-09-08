@@ -24,6 +24,7 @@ import java.lang.annotation.Target;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
+
 import javax.servlet.http.HttpServletRequest;
 
 import org.joda.time.DateTime;
@@ -578,6 +579,7 @@ public class MvcUriComponentsBuilderTests {
 
 	static class PersonCrudController extends AbstractCrudController<Person, Long> {
 
+		@Override
 		@RequestMapping(path = "/{id}", method = RequestMethod.GET)
 		public Person get(@PathVariable Long id) {
 			return new Person();

@@ -27,6 +27,7 @@ import org.springframework.test.util.subpackage.LegacyEntity;
 import org.springframework.test.util.subpackage.Person;
 import org.springframework.test.util.subpackage.PersonEntity;
 import org.springframework.test.util.subpackage.StaticFields;
+import org.springframework.test.util.subpackage.StaticMethods;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatIllegalArgumentException;
@@ -57,54 +58,55 @@ class ReflectionTestUtilsTests {
 	@BeforeEach
 	void resetStaticFields() {
 		StaticFields.reset();
+		StaticMethods.reset();
 	}
 
 	@Test
 	void setFieldWithNullTargetObject() throws Exception {
-		assertThatIllegalArgumentException().isThrownBy(() ->
-				setField((Object) null, "id", Long.valueOf(99)))
+		assertThatIllegalArgumentException()
+			.isThrownBy(() -> setField((Object) null, "id", Long.valueOf(99)))
 			.withMessageStartingWith("Either targetObject or targetClass");
 	}
 
 	@Test
 	void getFieldWithNullTargetObject() throws Exception {
-		assertThatIllegalArgumentException().isThrownBy(() ->
-				getField((Object) null, "id"))
+		assertThatIllegalArgumentException()
+			.isThrownBy(() -> getField((Object) null, "id"))
 			.withMessageStartingWith("Either targetObject or targetClass");
 	}
 
 	@Test
 	void setFieldWithNullTargetClass() throws Exception {
-		assertThatIllegalArgumentException().isThrownBy(() ->
-				setField((Class<?>) null, "id", Long.valueOf(99)))
+		assertThatIllegalArgumentException()
+			.isThrownBy(() -> setField((Class<?>) null, "id", Long.valueOf(99)))
 			.withMessageStartingWith("Either targetObject or targetClass");
 	}
 
 	@Test
 	void getFieldWithNullTargetClass() throws Exception {
-		assertThatIllegalArgumentException().isThrownBy(() ->
-				getField((Class<?>) null, "id"))
+		assertThatIllegalArgumentException()
+			.isThrownBy(() -> getField((Class<?>) null, "id"))
 			.withMessageStartingWith("Either targetObject or targetClass");
 	}
 
 	@Test
 	void setFieldWithNullNameAndNullType() throws Exception {
-		assertThatIllegalArgumentException().isThrownBy(() ->
-				setField(person, null, Long.valueOf(99), null))
+		assertThatIllegalArgumentException()
+			.isThrownBy(() -> setField(person, null, Long.valueOf(99), null))
 			.withMessageStartingWith("Either name or type");
 	}
 
 	@Test
 	void setFieldWithBogusName() throws Exception {
-		assertThatIllegalArgumentException().isThrownBy(() ->
-				setField(person, "bogus", Long.valueOf(99), long.class))
+		assertThatIllegalArgumentException()
+			.isThrownBy(() -> setField(person, "bogus", Long.valueOf(99), long.class))
 			.withMessageStartingWith("Could not find field 'bogus'");
 	}
 
 	@Test
 	void setFieldWithWrongType() throws Exception {
-		assertThatIllegalArgumentException().isThrownBy(() ->
-				setField(person, "id", Long.valueOf(99), String.class))
+		assertThatIllegalArgumentException()
+			.isThrownBy(() -> setField(person, "id", Long.valueOf(99), String.class))
 			.withMessageStartingWith("Could not find field");
 	}
 
@@ -316,8 +318,7 @@ class ReflectionTestUtilsTests {
 
 	@Test
 	void invokeSetterMethodWithNullValueForPrimitiveBoolean() throws Exception {
-		assertThatIllegalArgumentException().isThrownBy(() ->
-				invokeSetterMethod(person, "likesPets", null, boolean.class));
+		assertThatIllegalArgumentException().isThrownBy(() -> invokeSetterMethod(person, "likesPets", null, boolean.class));
 	}
 
 	@Test
@@ -328,7 +329,7 @@ class ReflectionTestUtilsTests {
 	}
 
 	@Test
-	@Disabled("[SPR-8644] findMethod() does not currently support var-args")
+	@Disabled("[SPR-8644] MethodInvoker.findMatchingMethod() does not currently support var-args")
 	void invokeMethodWithPrimitiveVarArgs() {
 		// IntelliJ IDEA 11 won't accept int assignment here
 		Integer sum = invokeMethod(component, "add", 1, 2, 3, 4);
@@ -364,29 +365,29 @@ class ReflectionTestUtilsTests {
 
 	@Test
 	void invokeInitMethodBeforeAutowiring() {
-		assertThatIllegalStateException().isThrownBy(() ->
-				invokeMethod(component, "init"))
+		assertThatIllegalStateException()
+			.isThrownBy(() -> invokeMethod(component, "init"))
 			.withMessageStartingWith("number must not be null");
 	}
 
 	@Test
 	void invokeMethodWithIncompatibleArgumentTypes() {
-		assertThatIllegalStateException().isThrownBy(() ->
-				invokeMethod(component, "subtract", "foo", 2.0))
-		.withMessageStartingWith("Method not found");
+		assertThatIllegalStateException()
+			.isThrownBy(() -> invokeMethod(component, "subtract", "foo", 2.0))
+			.withMessageStartingWith("Method not found");
 	}
 
 	@Test
 	void invokeMethodWithTooFewArguments() {
-		assertThatIllegalStateException().isThrownBy(() ->
-				invokeMethod(component, "configure", Integer.valueOf(42)))
+		assertThatIllegalStateException()
+			.isThrownBy(() -> invokeMethod(component, "configure", Integer.valueOf(42)))
 			.withMessageStartingWith("Method not found");
 	}
 
 	@Test
 	void invokeMethodWithTooManyArguments() {
-		assertThatIllegalStateException().isThrownBy(() ->
-				invokeMethod(component, "configure", Integer.valueOf(42), "enigma", "baz", "quux"))
+		assertThatIllegalStateException()
+			.isThrownBy(() -> invokeMethod(component, "configure", Integer.valueOf(42), "enigma", "baz", "quux"))
 			.withMessageStartingWith("Method not found");
 	}
 
@@ -421,6 +422,68 @@ class ReflectionTestUtilsTests {
 		String testCollaborator = "test collaborator";
 		invokeSetterMethod(entity, "collaborator", testCollaborator);
 		assertThat(entity.toString().contains(testCollaborator)).isTrue();
+	}
+
+	@Test
+	void invokeStaticMethodWithNullTargetClass() {
+		assertThatIllegalArgumentException()
+			.isThrownBy(() -> invokeMethod((Class<?>) null, null))
+			.withMessage("Target class must not be null");
+	}
+
+	@Test
+	void invokeStaticMethodWithNullMethodName() {
+		assertThatIllegalArgumentException()
+			.isThrownBy(() -> invokeMethod(getClass(), null))
+			.withMessage("Method name must not be empty");
+	}
+
+	@Test
+	void invokeStaticMethodWithEmptyMethodName() {
+		assertThatIllegalArgumentException()
+			.isThrownBy(() -> invokeMethod(getClass(), "  "))
+			.withMessage("Method name must not be empty");
+	}
+
+	@Test
+	void invokePublicStaticVoidMethodWithArguments() {
+		assertThat(StaticMethods.getPublicMethodValue()).isEqualTo("public");
+
+		String testCollaborator = "test collaborator";
+		invokeMethod(StaticMethods.class, "publicMethod", testCollaborator);
+		assertThat(StaticMethods.getPublicMethodValue()).isEqualTo(testCollaborator);
+	}
+
+	@Test
+	void invokePublicStaticMethodWithoutArguments() {
+		assertThat(StaticMethods.getPublicMethodValue()).isEqualTo("public");
+
+		String result = invokeMethod(StaticMethods.class, "publicMethod");
+		assertThat(result).isEqualTo(StaticMethods.getPublicMethodValue());
+	}
+
+	@Test
+	void invokePrivateStaticVoidMethodWithArguments() {
+		assertThat(StaticMethods.getPrivateMethodValue()).isEqualTo("private");
+
+		String testCollaborator = "test collaborator";
+		invokeMethod(StaticMethods.class, "privateMethod", testCollaborator);
+		assertThat(StaticMethods.getPrivateMethodValue()).isEqualTo(testCollaborator);
+	}
+
+	@Test
+	void invokePrivateStaticMethodWithoutArguments() {
+		assertThat(StaticMethods.getPrivateMethodValue()).isEqualTo("private");
+
+		String result = invokeMethod(StaticMethods.class, "privateMethod");
+		assertThat(result).isEqualTo(StaticMethods.getPrivateMethodValue());
+	}
+
+	@Test
+	void invokeStaticMethodWithNullTargetObjectAndNullTargetClass() {
+		assertThatIllegalArgumentException()
+			.isThrownBy(() -> invokeMethod((Object) null, (Class<?>) null, "id"))
+			.withMessage("Either 'targetObject' or 'targetClass' for the method must be specified");
 	}
 
 }

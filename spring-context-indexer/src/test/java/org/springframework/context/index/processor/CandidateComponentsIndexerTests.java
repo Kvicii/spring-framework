@@ -20,6 +20,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.file.Path;
+
 import javax.annotation.ManagedBean;
 import javax.inject.Named;
 import javax.persistence.Converter;
@@ -244,17 +245,18 @@ class CandidateComponentsIndexerTests {
 	}
 
 	private CandidateComponentsMetadata readGeneratedMetadata(File outputLocation) {
-		try {
-			File metadataFile = new File(outputLocation, MetadataStore.METADATA_PATH);
-			if (metadataFile.isFile()) {
-				return PropertiesMarshaller.read(new FileInputStream(metadataFile));
+		File metadataFile = new File(outputLocation, MetadataStore.METADATA_PATH);
+		if (metadataFile.isFile()) {
+			try (FileInputStream fileInputStream = new FileInputStream(metadataFile)) {
+				CandidateComponentsMetadata metadata = PropertiesMarshaller.read(fileInputStream);
+				return metadata;
 			}
-			else {
-				return new CandidateComponentsMetadata();
+			catch (IOException ex) {
+				throw new IllegalStateException("Failed to read metadata from disk", ex);
 			}
 		}
-		catch (IOException ex) {
-			throw new IllegalStateException("Failed to read metadata from disk", ex);
+		else {
+			return new CandidateComponentsMetadata();
 		}
 	}
 
