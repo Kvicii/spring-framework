@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.springframework.web.reactive.function.client;
 
 import java.time.Duration;
@@ -53,19 +54,18 @@ public class WebClientDataBufferAllocatingTests extends AbstractDataBufferAlloca
 	private static final Duration DELAY = Duration.ofSeconds(5);
 
 
-	private MockWebServer server;
+	private final ReactorResourceFactory factory = new ReactorResourceFactory();
+
+	private final MockWebServer server = new MockWebServer();
 
 	private WebClient webClient;
-
-	private ReactorResourceFactory factory;
 
 
 	@BeforeEach
 	public void setUp() {
-		this.factory = new ReactorResourceFactory();
+		this.factory.setUseGlobalResources(false);
 		this.factory.afterPropertiesSet();
 
-		this.server = new MockWebServer();
 		this.webClient = WebClient
 				.builder()
 				.clientConnector(initConnector())
