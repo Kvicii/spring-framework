@@ -22,6 +22,9 @@ if (System.getenv('GRADLE_ENTERPRISE_URL')) {
 	apply from: "$rootDir/gradle/build-scan-user-data.gradle"
 	buildScan {
 		captureTaskInputFiles = true
+		obfuscation {
+			ipAddresses { addresses -> addresses.collect { address -> '0.0.0.0'} }
+		}
 		publishAlways()
 		server = System.getenv('GRADLE_ENTERPRISE_URL')
 	}
@@ -42,7 +45,7 @@ configure(allprojects) { project ->
 		imports {
 			mavenBom "com.fasterxml.jackson:jackson-bom:2.9.9"
 			mavenBom "io.netty:netty-bom:4.1.39.Final"
-			mavenBom "io.projectreactor:reactor-bom:Dysprosium-BUILD-SNAPSHOT"
+			mavenBom "io.projectreactor:reactor-bom:Dysprosium-RELEASE"
 			mavenBom "org.eclipse.jetty:jetty-bom:9.4.20.v20190813"
 			mavenBom "org.jetbrains.kotlin:kotlin-bom:1.3.50"
 			mavenBom "org.jetbrains.kotlinx:kotlinx-coroutines-bom:1.3.1"
@@ -132,19 +135,19 @@ configure(allprojects) { project ->
 			dependency "net.sf.ehcache:ehcache:2.10.6"
 			dependency "org.ehcache:jcache:1.0.1"
 			dependency "org.ehcache:ehcache:3.4.0"
-			dependency "org.hibernate:hibernate-core:5.4.4.Final"
+			dependency "org.hibernate:hibernate-core:5.4.5.Final"
 			dependency "org.hibernate:hibernate-validator:6.0.17.Final"
 			dependency "org.webjars:webjars-locator-core:0.37"
 			dependency "org.webjars:underscorejs:1.8.3"
 
-			dependencySet(group: 'org.apache.tomcat', version: '9.0.24') {
+			dependencySet(group: 'org.apache.tomcat', version: '9.0.26') {
 				entry 'tomcat-util'
 				entry('tomcat-websocket') {
 					exclude group: "org.apache.tomcat", name: "tomcat-websocket-api"
 					exclude group: "org.apache.tomcat", name: "tomcat-servlet-api"
 				}
 			}
-			dependencySet(group: 'org.apache.tomcat.embed', version: '9.0.22') {
+			dependencySet(group: 'org.apache.tomcat.embed', version: '9.0.26') {
 				entry 'tomcat-embed-core'
 				entry 'tomcat-embed-websocket'
 			}
@@ -296,8 +299,7 @@ configure(allprojects) { project ->
 		repositories {
 			mavenCentral()
 			maven { url "https://repo.spring.io/libs-spring-framework-build" }
-			maven { url "https://repo.spring.io/milestone" } // Reactor
-			maven { url "https://repo.spring.io/snapshot" } // Reactor
+			maven { url "https://repo.spring.io/milestone" } // for RSocket
 		}
 	}
 	configurations.all {
@@ -342,7 +344,7 @@ configure([rootProject] + javaProjects) { project ->
 	}
 
 	checkstyle {
-		toolVersion = "8.23"
+		toolVersion = "8.24"
 		configDir = rootProject.file("src/checkstyle")
 	}
 
@@ -404,11 +406,15 @@ configure(rootProject) {
 	nohttp {
 		source.exclude "**/test-output/**"
 		whitelistFile = project.file("src/nohttp/whitelist.lines")
-		def projectDirURI = project.projectDir.toURI()
-		allprojects.forEach { p ->
-			def outURI = p.file("out").toURI()
-			def pattern = projectDirURI.relativize(outURI).path + "**"
-			source.exclude pattern
+		def rootPath = file(rootDir).toPath()
+		def projectDirs = allprojects.collect { it.projectDir } + "${rootDir}/buildSrc"
+		projectDirs.forEach { dir ->
+			[ 'bin', 'build', 'out', '.settings' ]
+				.collect { rootPath.relativize(new File(dir, it).toPath()) }
+				.forEach { source.exclude "$it/**" }
+			[ '.classpath', '.project' ]
+				.collect { rootPath.relativize(new File(dir, it).toPath()) }
+				.forEach { source.exclude "$it" }
 		}
 	}
 
