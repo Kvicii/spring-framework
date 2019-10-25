@@ -964,6 +964,24 @@ class AnnotationUtilsTests {
 		TestRepeatableContainer.class)).isNotNull();
 	}
 
+	@Test // gh-23856
+	void findAnnotationFindsRepeatableContainerOnComposedAnnotationMetaAnnotatedWithRepeatableAnnotations() {
+		MyRepeatableContainer annotation = AnnotationUtils.findAnnotation(MyRepeatableMeta1And2.class, MyRepeatableContainer.class);
+
+		assertThat(annotation).isNotNull();
+		assertThat(annotation.value()).extracting(MyRepeatable::value).containsExactly("meta1", "meta2");
+	}
+
+	@Test // gh-23856
+	void findAnnotationFindsRepeatableContainerOnComposedAnnotationMetaAnnotatedWithRepeatableAnnotationsOnMethod() throws NoSuchMethodException {
+		Method method = getClass().getDeclaredMethod("methodWithComposedAnnotationMetaAnnotatedWithRepeatableAnnotations");
+		MyRepeatableContainer annotation = AnnotationUtils.findAnnotation(method, MyRepeatableContainer.class);
+
+		assertThat(annotation).isNotNull();
+		assertThat(annotation.value()).extracting(MyRepeatable::value).containsExactly("meta1", "meta2");
+	}
+
+
 	@SafeVarargs
 	static <T> T[] asArray(T... arr) {
 		return arr;
@@ -1260,6 +1278,17 @@ class AnnotationUtilsTests {
 	@Inherited
 	@MyRepeatable("meta2")
 	@interface MyRepeatableMeta2 {
+	}
+
+	@Retention(RetentionPolicy.RUNTIME)
+	@Inherited
+	@MyRepeatable("meta1")
+	@MyRepeatable("meta2")
+	@interface MyRepeatableMeta1And2 {
+	}
+
+	@MyRepeatableMeta1And2
+	void methodWithComposedAnnotationMetaAnnotatedWithRepeatableAnnotations() {
 	}
 
 	interface InterfaceWithRepeated {
