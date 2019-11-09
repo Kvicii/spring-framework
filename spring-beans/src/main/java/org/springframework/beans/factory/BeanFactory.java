@@ -93,6 +93,9 @@ import org.springframework.lang.Nullable;
  * <li>DisposableBean's {@code destroy}
  * <li>a custom destroy-method definition
  * </ol>
+ * <p>
+ * 含有一系列的检索方法 可以很方便的从IoC容器中得到需要的Bean 从而忽略具体的IoC容器的实现
+ * 这些检索方法是基本的容器入口
  *
  * @author Rod Johnson
  * @author Juergen Hoeller
