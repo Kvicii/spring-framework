@@ -81,7 +81,7 @@ public class FileSystemXmlApplicationContext extends AbstractXmlApplicationConte
 	 * Create a new FileSystemXmlApplicationContext, loading the definitions
 	 * from the given XML file and automatically refreshing the context.
 	 *
-	 * @param configLocation file path
+	 * @param configLocation file path BeanDefinition所在的文件路径
 	 * @throws BeansException if context creation failed
 	 */
 	public FileSystemXmlApplicationContext(String configLocation) throws BeansException {
@@ -92,7 +92,7 @@ public class FileSystemXmlApplicationContext extends AbstractXmlApplicationConte
 	 * Create a new FileSystemXmlApplicationContext, loading the definitions
 	 * from the given XML files and automatically refreshing the context.
 	 *
-	 * @param configLocations array of file paths
+	 * @param configLocations array of file paths 允许多个BeanDefinition文件路径
 	 * @throws BeansException if context creation failed
 	 */
 	public FileSystemXmlApplicationContext(String... configLocations) throws BeansException {
@@ -103,6 +103,8 @@ public class FileSystemXmlApplicationContext extends AbstractXmlApplicationConte
 	 * Create a new FileSystemXmlApplicationContext with the given parent,
 	 * loading the definitions from the given XML files and automatically
 	 * refreshing the context.
+	 * <p>
+	 * 指定多个BeanDefinition文件路径的同时 还允许指定自己的双亲IoC容器
 	 *
 	 * @param configLocations array of file paths
 	 * @param parent          the parent context
@@ -131,7 +133,7 @@ public class FileSystemXmlApplicationContext extends AbstractXmlApplicationConte
 	 * Create a new FileSystemXmlApplicationContext with the given parent,
 	 * loading the definitions from the given XML files.
 	 * <p>
-	 * 功能1:启动IoC容器的refresh()过程
+	 * 启动IoC容器的refresh()过程-->IoC容器初始化过程(BeanDefinition的Resource资源定位、载入、注册)
 	 *
 	 * @param configLocations array of file paths
 	 * @param refresh         whether to automatically refresh the context,
@@ -159,7 +161,10 @@ public class FileSystemXmlApplicationContext extends AbstractXmlApplicationConte
 	 * interpreted as relative to the current VM working directory.
 	 * This is consistent with the semantics in a Servlet container.
 	 * <p>
-	 * 功能2:可以得到FileSystemResource的资源定位
+	 * 这是FileSystemXmlApplicationContext的Resource资源定位的实现 可以得到FileSystemResource的资源定位
+	 * 通过构造一个FileSystemResource得到一个在文件系统的BeanDefinition
+	 * <p>
+	 * 该方法是在BeanDefinitionReader的loadBeanDefinition()中调用的 loadBeanDefinition()采用了模板模式 具体的定位实际上是由各个子类完成
 	 *
 	 * @param path path to the resource
 	 * @return the Resource handle

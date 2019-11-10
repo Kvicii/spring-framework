@@ -949,6 +949,9 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
 
 		BeanDefinition existingDefinition = this.beanDefinitionMap.get(beanName);
 		if (existingDefinition != null) {
+			/**
+			 * 检查是否有相同名字的BeanDefinition已经注册到IoC容器中了 如果有相同名字的BeanDefinition但配置不允许覆盖 直接throw Exception
+			 */
 			if (!isAllowBeanDefinitionOverriding()) {
 				throw new BeanDefinitionOverrideException(beanName, beanDefinition, existingDefinition);
 			} else if (existingDefinition.getRole() < beanDefinition.getRole()) {
@@ -985,6 +988,10 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
 				}
 			} else {
 				// Still in startup registration phase
+				/**
+				 * 正常的BeanDefinition的注册过程 将Bean的name放入beanDefinitionNames的同时
+				 * 将beanName作为key BeanDefinition作为value存入到IoC容器持有的beanDefinitionMap中
+				 */
 				this.beanDefinitionMap.put(beanName, beanDefinition);
 				this.beanDefinitionNames.add(beanName);
 				removeManualSingletonName(beanName);
