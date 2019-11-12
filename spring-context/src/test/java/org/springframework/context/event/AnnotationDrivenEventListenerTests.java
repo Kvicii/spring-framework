@@ -24,12 +24,14 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 import javax.annotation.PostConstruct;
+import javax.inject.Inject;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Disabled;
@@ -622,6 +624,13 @@ public class AnnotationDrivenEventListenerTests {
 		assertThat(listener.order).contains("first", "second", "third");
 	}
 
+	@Test
+	public void missingListenerBeanIgnored() {
+		load(MissingEventListener.class);
+		context.getBean(UseMissingEventListener.class);
+		context.getBean(ApplicationEventMulticaster.class).multicastEvent(new TestEvent(this));
+	}
+
 
 	private void load(Class<?>... classes) {
 		List<Class<?>> allClasses = new ArrayList<>();
@@ -1073,6 +1082,35 @@ public class AnnotationDrivenEventListenerTests {
 		@Override
 		public String getConversationId() {
 			return null;
+		}
+	}
+
+	@Configuration
+	@Import(UseMissingEventListener.class)
+	public static class MissingEventListener {
+
+		@Bean
+		public MyEventListener missing() {
+			return null;
+		}
+	}
+
+	@Component
+	public static class MyEventListener {
+
+		@EventListener
+		public void hear(TestEvent e) {
+			throw new AssertionError();
+		}
+	}
+
+	public static class UseMissingEventListener {
+
+		@Inject
+		public UseMissingEventListener(Optional<MyEventListener> notHere) {
+			if (notHere.isPresent()) {
+				throw new AssertionError();
+			}
 		}
 	}
 
