@@ -291,31 +291,22 @@ public interface WebClient {
 		Builder clientConnector(ClientHttpConnector connector);
 
 		/**
-		 * Provide the {@link ExchangeStrategies} to use.
-		 * <p>This is useful for changing the default settings, yet still allowing
-		 * further customizations via {@link #exchangeStrategies(Consumer)}.
-		 * If not set, defaults are obtained from {@link ExchangeStrategies#withDefaults()}.
+		 * Configure the {@link ExchangeStrategies} to use.
+		 * <p>Note that in a scenario where the builder is configured by
+		 * multiple parties, it is preferable to use
+		 * {@link #exchangeStrategies(Consumer)} in order to customize the same
+		 * {@code ExchangeStrategies}. This method here sets the strategies that
+		 * everyone else then can customize.
+		 * <p>By default this is {@link ExchangeStrategies#withDefaults()}.
 		 * @param strategies the strategies to use
-		 * @deprecated as of 5.1, in favor of {@link #exchangeStrategies(ExchangeStrategies.Builder)}
 		 */
-		@Deprecated
 		Builder exchangeStrategies(ExchangeStrategies strategies);
 
 		/**
-		 * Provide the {@link ExchangeStrategies.Builder} to use.
-		 * <p>This is useful for changing the default settings, yet still allowing
-		 * further customizations via {@link #exchangeStrategies(Consumer)}.
-		 * If not set, defaults are obtained from {@link ExchangeStrategies#builder()}.
-		 * @param strategies the strategies to use
-		 * @since 5.1.12
-		 */
-		Builder exchangeStrategies(ExchangeStrategies.Builder strategies);
-
-		/**
-		 * Customize the {@link ExchangeStrategies}.
-		 * <p>Allows further customization on {@link ExchangeStrategies},
-		 * mutating them if they were {@link #exchangeStrategies(ExchangeStrategies) set},
-		 * or starting from {@link ExchangeStrategies#withDefaults() defaults}.
+		 * Customize the strategies configured via
+		 * {@link #exchangeStrategies(ExchangeStrategies)}. This method is
+		 * designed for use in scenarios where multiple parties wish to update
+		 * the {@code ExchangeStrategies}.
 		 * @since 5.1.12
 		 */
 		Builder exchangeStrategies(Consumer<ExchangeStrategies.Builder> configurer);
@@ -507,9 +498,15 @@ public interface WebClient {
 		 *     .exchange()
 		 *     .flatMapMany(response -&gt; response.bodyToFlux(Person.class));
 		 * </pre>
-		 * <p><strong>NOTE:</strong> You must always use one of the body or
-		 * entity methods of the response to ensure resources are released.
-		 * See {@link ClientResponse} for more details.
+		 * <p><strong>NOTE:</strong> Unlike {@link #retrieve()}, when using
+		 * {@code exchange()}, it is the responsibility of the application to
+		 * consume any response content regardless of the scenario (success,
+		 * error, unexpected data, etc). Not doing so can cause a memory leak.
+		 * See {@link ClientResponse} for a list of all the available options
+		 * for consuming the body. Generally prefer using {@link #retrieve()}
+		 * unless you have a good reason to use {@code exchange()} which does
+		 * allow to check the response status and headers before deciding how or
+		 * if to consume the response.
 		 * @return a {@code Mono} for the response
 		 * @see #retrieve()
 		 */

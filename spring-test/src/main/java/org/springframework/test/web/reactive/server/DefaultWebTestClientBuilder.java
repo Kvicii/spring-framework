@@ -137,14 +137,7 @@ class DefaultWebTestClientBuilder implements WebTestClient.Builder {
 	}
 
 	@Override
-	@Deprecated
 	public WebTestClient.Builder exchangeStrategies(ExchangeStrategies strategies) {
-		this.webClientBuilder.exchangeStrategies(strategies);
-		return this;
-	}
-
-	@Override
-	public WebTestClient.Builder exchangeStrategies(ExchangeStrategies.Builder strategies) {
 		this.webClientBuilder.exchangeStrategies(strategies);
 		return this;
 	}
