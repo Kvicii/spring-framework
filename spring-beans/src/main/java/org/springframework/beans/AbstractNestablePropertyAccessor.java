@@ -281,6 +281,9 @@ public abstract class AbstractNestablePropertyAccessor extends AbstractPropertyA
 
 	@SuppressWarnings("unchecked")
 	private void processKeyedProperty(PropertyTokenHolder tokens, PropertyValue pv) {
+		/**
+		 * 取得Bean中对注入对象的引用 比如Array/List/Map等
+		 */
 		Object propValue = getPropertyHoldingValue(tokens);
 		PropertyHandler ph = getLocalPropertyHandler(tokens.actualName);
 		if (ph == null) {
@@ -290,6 +293,9 @@ public abstract class AbstractNestablePropertyAccessor extends AbstractPropertyA
 		Assert.state(tokens.keys != null, "No token keys");
 		String lastKey = tokens.keys[tokens.keys.length - 1];
 
+		/**
+		 * 对Array进行注入
+		 */
 		if (propValue.getClass().isArray()) {
 			Class<?> requiredType = propValue.getClass().getComponentType();
 			int arrayIndex = Integer.parseInt(lastKey);
@@ -315,7 +321,9 @@ public abstract class AbstractNestablePropertyAccessor extends AbstractPropertyA
 						"Invalid array index in property path '" + tokens.canonicalName + "'", ex);
 			}
 		}
-
+		/**
+		 * 对List进行注入
+		 */
 		else if (propValue instanceof List) {
 			Class<?> requiredType = ph.getCollectionType(tokens.keys.length);
 			List<Object> list = (List<Object>) propValue;
@@ -351,7 +359,9 @@ public abstract class AbstractNestablePropertyAccessor extends AbstractPropertyA
 				}
 			}
 		}
-
+		/**
+		 * 对Map进行注入
+		 */
 		else if (propValue instanceof Map) {
 			Class<?> mapKeyType = ph.getMapKeyType(tokens.keys.length);
 			Class<?> mapValueType = ph.getMapValueType(tokens.keys.length);
@@ -370,7 +380,6 @@ public abstract class AbstractNestablePropertyAccessor extends AbstractPropertyA
 					mapValueType, ph.nested(tokens.keys.length));
 			map.put(convertedMapKey, convertedMapValue);
 		}
-
 		else {
 			throw new InvalidPropertyException(getRootClass(), this.nestedPath + tokens.canonicalName,
 					"Property referenced in indexed property path '" + tokens.canonicalName +
