@@ -620,6 +620,9 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 		Object exposedObject = bean;
 		try {
 			populateBean(beanName, mbd, instanceWrapper);
+			/**
+			 * 在完成对Bean的生成和依赖注入后 开始对Bean进行初始化 初始化过程包含了对后置处理器postProcessBeforeInitialization()的调用
+			 */
 			exposedObject = initializeBean(beanName, exposedObject, mbd);
 		} catch (Throwable ex) {
 			if (ex instanceof BeanCreationException && beanName.equals(((BeanCreationException) ex).getBeanName())) {
@@ -1511,6 +1514,10 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 		String[] propertyNames = unsatisfiedNonSimpleProperties(mbd, bw);
 		for (String propertyName : propertyNames) {
 			if (containsBean(propertyName)) {
+				/**
+				 * 使用取得的当前Bean的属性名作为参数 向IoC容器索取Bean
+				 * 之后把得到的Bean设置到当前Bean的属性中去
+				 */
 				Object bean = getBean(propertyName);
 				pvs.add(propertyName, bean);
 				registerDependentBean(propertyName, beanName);
@@ -1842,10 +1849,17 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 		}
 
 		Object wrappedBean = bean;
+		/**
+		 * 这里是对后置处理器BeanPostProcessors的postProcessorsBeforeInitialization的回调方法的调用
+		 */
 		if (mbd == null || !mbd.isSynthetic()) {
 			wrappedBean = applyBeanPostProcessorsBeforeInitialization(wrappedBean, beanName);
 		}
 
+		/**
+		 * 调用Bean的初始化方法这个初始化方法是在BeanDefinition中通过定义init-method属性指定的
+		 * 如果Bean实现了InitializingBean接口 那么这个Bean的afterPropertiesSet实现也会被调用
+		 */
 		try {
 			invokeInitMethods(beanName, wrappedBean, mbd);
 		} catch (Throwable ex) {
@@ -1853,6 +1867,9 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 					(mbd != null ? mbd.getResourceDescription() : null),
 					beanName, "Invocation of init method failed", ex);
 		}
+		/**
+		 * 这里是对后置处理器BeanPostProcessors的postProcessorsAfterInitialization的回调方法的调用
+		 */
 		if (mbd == null || !mbd.isSynthetic()) {
 			wrappedBean = applyBeanPostProcessorsAfterInitialization(wrappedBean, beanName);
 		}
