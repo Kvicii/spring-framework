@@ -411,7 +411,7 @@ public class BeanDefinitionParserDelegate {
 	@Nullable
 	public BeanDefinitionHolder parseBeanDefinitionElement(Element ele, @Nullable BeanDefinition containingBean) {
 		/**
-		 * 这里取得在<bean>元素中定义的id、name和aliase属性
+		 * 这里取得在<bean>元素中定义的id、name和aliases属性
 		 */
 		String id = ele.getAttribute(ID_ATTRIBUTE);
 		String nameAttr = ele.getAttribute(NAME_ATTRIBUTE);

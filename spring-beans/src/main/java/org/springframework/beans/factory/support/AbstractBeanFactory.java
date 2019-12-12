@@ -315,7 +315,7 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 			 * 对IoC容器的BeanDefinition是否存在进行检查
 			 * 1.首先检查当前BeanFactory中是否能获取所需要的Bean
 			 * 2.当前工厂找不到 到双亲BeanFactory取
-			 * 3.双亲BeanFactory娶不到 顺着双亲BeanFactory一直向上找
+			 * 3.双亲BeanFactory取不到 顺着双亲BeanFactory一直向上找
 			 */
 			BeanFactory parentBeanFactory = getParentBeanFactory();
 			if (parentBeanFactory != null && !containsBeanDefinition(beanName)) {
