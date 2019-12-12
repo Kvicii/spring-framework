@@ -230,12 +230,24 @@ abstract class AnnotationsScanner {
 				return superclassResult;
 			}
 		}
-		Class<?> enclosingClass = source.getEnclosingClass();
-		if (includeEnclosing && enclosingClass != null) {
-			R enclosingResult = processClassHierarchy(context, aggregateIndex,
-					enclosingClass, processor, classFilter, includeInterfaces, true);
-			if (enclosingResult != null) {
-				return enclosingResult;
+		if (includeEnclosing) {
+			// Since merely attempting to load the enclosing class may result in
+			// automatic loading of sibling nested classes that in turn results
+			// in an exception such as NoClassDefFoundError, we wrap the following
+			// in its own dedicated try-catch block in order not to preemptively
+			// halt the annotation scanning process.
+			try {
+				Class<?> enclosingClass = source.getEnclosingClass();
+				if (enclosingClass != null) {
+					R enclosingResult = processClassHierarchy(context, aggregateIndex,
+						enclosingClass, processor, classFilter, includeInterfaces, true);
+					if (enclosingResult != null) {
+						return enclosingResult;
+					}
+				}
+			}
+			catch (Throwable ex) {
+				AnnotationUtils.handleIntrospectionFailure(source, ex);
 			}
 		}
 		return null;

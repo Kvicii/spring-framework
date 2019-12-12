@@ -986,7 +986,7 @@ public class ResolvableType implements Serializable {
 	 * using the full generic type information for assignability checks.
 	 * For example: {@code ResolvableType.forClass(MyArrayList.class)}.
 	 * @param clazz the class to introspect ({@code null} is semantically
-	 * equivalent to {@code Object.class} for typical use cases here}
+	 * equivalent to {@code Object.class} for typical use cases here)
 	 * @return a {@link ResolvableType} for the specified class
 	 * @see #forClass(Class, Class)
 	 * @see #forClassWithGenerics(Class, Class...)
@@ -1496,10 +1496,10 @@ public class ResolvableType implements Serializable {
 		@Override
 		@Nullable
 		public ResolvableType resolveVariable(TypeVariable<?> variable) {
+			TypeVariable<?> variableToCompare = SerializableTypeWrapper.unwrap(variable);
 			for (int i = 0; i < this.variables.length; i++) {
-				TypeVariable<?> v1 = SerializableTypeWrapper.unwrap(this.variables[i]);
-				TypeVariable<?> v2 = SerializableTypeWrapper.unwrap(variable);
-				if (ObjectUtils.nullSafeEquals(v1, v2)) {
+				TypeVariable<?> resolvedVariable = SerializableTypeWrapper.unwrap(this.variables[i]);
+				if (ObjectUtils.nullSafeEquals(resolvedVariable, variableToCompare)) {
 					return this.generics[i];
 				}
 			}
