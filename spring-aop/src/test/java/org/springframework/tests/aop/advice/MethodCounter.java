@@ -29,15 +29,26 @@ import java.util.HashMap;
 @SuppressWarnings("serial")
 public class MethodCounter implements Serializable {
 
-	/** Method name --> count, does not understand overloading */
+	/**
+	 * Method name --> count, does not understand overloading
+	 * 存储方法名和调用次数的键值Map
+	 */
 	private HashMap<String, Integer> map = new HashMap<>();
 
+	/**
+	 * 总的调用次数 忽略方法名
+	 */
 	private int allCount;
 
 	protected void count(Method m) {
 		count(m.getName());
 	}
 
+	/**
+	 * 根据目标方法名统计调用次数
+	 *
+	 * @param methodName
+	 */
 	protected void count(String methodName) {
 		Integer i = map.get(methodName);
 		i = (i != null) ? new Integer(i.intValue() + 1) : new Integer(1);
@@ -45,11 +56,22 @@ public class MethodCounter implements Serializable {
 		++allCount;
 	}
 
+	/**
+	 * 根据方法名取得调用次数
+	 *
+	 * @param methodName
+	 * @return
+	 */
 	public int getCalls(String methodName) {
 		Integer i = map.get(methodName);
 		return (i != null ? i.intValue() : 0);
 	}
 
+	/**
+	 * 取得所有方法的调用次数
+	 *
+	 * @return
+	 */
 	public int getCalls() {
 		return allCount;
 	}
@@ -57,6 +79,7 @@ public class MethodCounter implements Serializable {
 	/**
 	 * A bit simplistic: just wants the same class.
 	 * Doesn't worry about counts.
+	 *
 	 * @see java.lang.Object#equals(java.lang.Object)
 	 */
 	@Override
@@ -68,5 +91,4 @@ public class MethodCounter implements Serializable {
 	public int hashCode() {
 		return getClass().hashCode();
 	}
-
 }
