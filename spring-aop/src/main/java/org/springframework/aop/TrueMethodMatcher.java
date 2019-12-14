@@ -29,9 +29,10 @@ final class TrueMethodMatcher implements MethodMatcher, Serializable {
 
 	public static final TrueMethodMatcher INSTANCE = new TrueMethodMatcher();
 
-
 	/**
 	 * Enforce Singleton pattern.
+	 * 单例模式实现特点 设置私有构造函数 使其不能直接实例化
+	 * 设置一个静态的类变量保证实例唯一
 	 */
 	private TrueMethodMatcher() {
 	}
@@ -53,7 +54,6 @@ final class TrueMethodMatcher implements MethodMatcher, Serializable {
 		throw new UnsupportedOperationException();
 	}
 
-
 	@Override
 	public String toString() {
 		return "MethodMatcher.TRUE";
@@ -67,5 +67,4 @@ final class TrueMethodMatcher implements MethodMatcher, Serializable {
 	private Object readResolve() {
 		return INSTANCE;
 	}
-
 }
