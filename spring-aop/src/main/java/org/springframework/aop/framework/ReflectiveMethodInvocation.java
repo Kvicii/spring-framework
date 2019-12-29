@@ -164,6 +164,10 @@ public class ReflectiveMethodInvocation implements ProxyMethodInvocation, Clonea
 	@Nullable
 	public Object proceed() throws Throwable {
 		// We start with an index of -1 and increment early.
+		/**
+		 * 从索引为-1的拦截器开始调用 按序递增
+		 * 如果拦截链中的拦截器迭代调用完毕 调用target函数 该函数是通过反射机制完成的 具体实现在AopUtils#invokeJoinpointUsingReflection
+		 */
 		if (this.currentInterceptorIndex == this.interceptorsAndDynamicMethodMatchers.size() - 1) {
 			return invokeJoinpoint();
 		}
@@ -173,6 +177,9 @@ public class ReflectiveMethodInvocation implements ProxyMethodInvocation, Clonea
 		if (interceptorOrInterceptionAdvice instanceof InterceptorAndDynamicMethodMatcher) {
 			// Evaluate dynamic method matcher here: static part will already have
 			// been evaluated and found to match.
+			/**
+			 * 对拦截器进行动态匹配 如果和定义的pointcut匹配 advice将会被执行
+			 */
 			InterceptorAndDynamicMethodMatcher dm =
 					(InterceptorAndDynamicMethodMatcher) interceptorOrInterceptionAdvice;
 			Class<?> targetClass = (this.targetClass != null ? this.targetClass : this.method.getDeclaringClass());
@@ -181,11 +188,17 @@ public class ReflectiveMethodInvocation implements ProxyMethodInvocation, Clonea
 			} else {
 				// Dynamic matching failed.
 				// Skip this interceptor and invoke the next in the chain.
+				/**
+				 * 不匹配 proceed()会被递归调用 直到所有的拦截器都被运行
+				 */
 				return proceed();
 			}
 		} else {
 			// It's an interceptor, so we just invoke it: The pointcut will have
 			// been evaluated statically before this object was constructed.
+			/**
+			 * 不需要动态匹配的拦截器 直接调用invoke
+			 */
 			return ((MethodInterceptor) interceptorOrInterceptionAdvice).invoke(this);
 		}
 	}
