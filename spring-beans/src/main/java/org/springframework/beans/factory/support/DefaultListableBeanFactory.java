@@ -508,7 +508,7 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
 		Class<?> resolved = type.resolve();
 		if (resolved != null && !type.hasGenerics()) {
 			return getBeanNamesForType(resolved, includeNonSingletons, includeNonSingletons);
-		} else{
+		} else {
 			return doGetBeanNamesForType(type, includeNonSingletons, allowEagerInit);
 		}
 	}
