@@ -18,6 +18,7 @@ package org.springframework.aop.framework.adapter;
 
 /**
  * Singleton to publish a shared DefaultAdvisorAdapterRegistry instance.
+ * 完成各种通知的适配和注册工作
  *
  * @author Rod Johnson
  * @author Juergen Hoeller
@@ -26,9 +27,11 @@ package org.springframework.aop.framework.adapter;
  */
 public final class GlobalAdvisorAdapterRegistry {
 
+	/**
+	 * 典型的单例模式实现方式 使用静态变量保持一个唯一实例
+	 */
 	private GlobalAdvisorAdapterRegistry() {
 	}
-
 
 	/**
 	 * Keep track of a single instance so we can return it to classes that request it.
@@ -50,5 +53,4 @@ public final class GlobalAdvisorAdapterRegistry {
 	static void reset() {
 		instance = new DefaultAdvisorAdapterRegistry();
 	}
-
 }
