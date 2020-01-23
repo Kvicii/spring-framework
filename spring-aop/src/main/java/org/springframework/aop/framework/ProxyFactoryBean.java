@@ -144,7 +144,7 @@ public class ProxyFactoryBean extends ProxyCreatorSupport
 	 * @see #setInterfaces
 	 * @see AbstractSingletonProxyFactoryBean#setProxyInterfaces
 	 */
-	public void setProxyInterfaces(Class<?>[] proxyInterfaces) throws ClassNotFoundException {
+	public void setProxyInterfaces(Class<?>[] proxyInterfaces) {
 		setInterfaces(proxyInterfaces);
 	}
 
