@@ -141,6 +141,9 @@ public interface HandlerMapping {
 	 * <p>Returns {@code null} if no match was found. This is not an error.
 	 * The DispatcherServlet will query all registered HandlerMapping beans to find
 	 * a match, and only decide there is an error if none can find a handler.
+	 * 实际返回的是一个HandlerExecutionChain
+	 * 这是典型的Command模式的使用
+	 * HandlerExecutionChain中不仅持有了handler本身 还包括了处理这个HTTP请求相关的拦截器
 	 *
 	 * @param request current HTTP request
 	 * @return a HandlerExecutionChain instance containing handler object and
