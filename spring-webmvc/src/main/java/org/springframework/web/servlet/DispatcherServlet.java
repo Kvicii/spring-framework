@@ -987,7 +987,10 @@ public class DispatcherServlet extends FrameworkServlet {
 			}
 		}
 
-		// Make framework objects available to handlers and view objects.
+		/**
+		 * Make framework objects available to handlers and view objects.
+		 * 对HTTP请求参数进行快照处理
+		 */
 		request.setAttribute(WEB_APPLICATION_CONTEXT_ATTRIBUTE, getWebApplicationContext());
 		request.setAttribute(LOCALE_RESOLVER_ATTRIBUTE, this.localeResolver);
 		request.setAttribute(THEME_RESOLVER_ATTRIBUTE, this.themeResolver);
@@ -1003,6 +1006,9 @@ public class DispatcherServlet extends FrameworkServlet {
 		}
 
 		try {
+			/**
+			 * 实际分发请求的入口
+			 */
 			doDispatch(request, response);
 		} finally {
 			if (!WebAsyncUtils.getAsyncManager(request).isConcurrentHandlingStarted()) {
@@ -1066,6 +1072,9 @@ public class DispatcherServlet extends FrameworkServlet {
 		WebAsyncManager asyncManager = WebAsyncUtils.getAsyncManager(request);
 
 		try {
+			/**
+			 * 准备好一个ModelAndView对象 这个对象中持有了Handler处理请求的结果
+			 */
 			ModelAndView mv = null;
 			Exception dispatchException = null;
 
@@ -1073,14 +1082,21 @@ public class DispatcherServlet extends FrameworkServlet {
 				processedRequest = checkMultipart(request);
 				multipartRequestParsed = (processedRequest != request);
 
-				// Determine handler for the current request.
+				/**
+				 * Determine handler for the current request.
+				 * 根据请求得到对应的Handler
+				 */
 				mappedHandler = getHandler(processedRequest);
 				if (mappedHandler == null) {
 					noHandlerFound(processedRequest, response);
 					return;
 				}
 
-				// Determine handler adapter for the current request.
+				/**
+				 * Determine handler adapter for the current request.
+				 * 实际调用Handler位置 在执行Handler之前 用HandlerAdapter检查Handler的合法性
+				 * 是否是按照Spring的要求编写的Handler
+				 */
 				HandlerAdapter ha = getHandlerAdapter(mappedHandler.getHandler());
 
 				// Process last-modified header, if supported by the handler.
@@ -1092,19 +1108,30 @@ public class DispatcherServlet extends FrameworkServlet {
 						return;
 					}
 				}
-
+				/**
+				 * 为注册的拦截器配置预处理方法
+				 * 调用Handler的拦截器 从HandlerExecutionChain中取出Interceptor进行前置处理
+				 */
 				if (!mappedHandler.applyPreHandle(processedRequest, response)) {
 					return;
 				}
 
-				// Actually invoke the handler.
+				/**
+				 * Actually invoke the handler.
+				 * 通过HandlerAdapter的handle方法实际触发对Controller的handleRequest方法的调用
+				 */
 				mv = ha.handle(processedRequest, response, mappedHandler.getHandler());
 
 				if (asyncManager.isConcurrentHandlingStarted()) {
 					return;
 				}
-
+				/**
+				 * 是否需要根据视图名称进行翻译和转换
+				 */
 				applyDefaultViewName(processedRequest, mv);
+				/**
+				 * 对Handler的拦截器进行后置处理
+				 */
 				mappedHandler.applyPostHandle(processedRequest, response, mv);
 			} catch (Exception ex) {
 				dispatchException = ex;
@@ -1113,6 +1140,9 @@ public class DispatcherServlet extends FrameworkServlet {
 				// making them available for @ExceptionHandler methods and other scenarios.
 				dispatchException = new NestedServletException("Handler dispatch failed", err);
 			}
+			/**
+			 * 使用视图对ModelAndView的数据进行展现
+			 */
 			processDispatchResult(processedRequest, response, mappedHandler, mv, dispatchException);
 		} catch (Exception ex) {
 			triggerAfterCompletion(processedRequest, response, mappedHandler, ex);
@@ -1283,6 +1313,10 @@ public class DispatcherServlet extends FrameworkServlet {
 	protected HandlerExecutionChain getHandler(HttpServletRequest request) throws Exception {
 		if (this.handlerMappings != null) {
 			for (HandlerMapping mapping : this.handlerMappings) {
+				/**
+				 * HandlerMapping调用getHandler获取HandlerExecutionChain对象
+				 * 与之前的分析对应上
+				 */
 				HandlerExecutionChain handler = mapping.getHandler(request);
 				if (handler != null) {
 					return handler;
@@ -1319,6 +1353,9 @@ public class DispatcherServlet extends FrameworkServlet {
 	 */
 	protected HandlerAdapter getHandlerAdapter(Object handler) throws ServletException {
 		if (this.handlerAdapters != null) {
+			/**
+			 * 对持有的所有adapter进行匹配
+			 */
 			for (HandlerAdapter adapter : this.handlerAdapters) {
 				if (adapter.supports(handler)) {
 					return adapter;

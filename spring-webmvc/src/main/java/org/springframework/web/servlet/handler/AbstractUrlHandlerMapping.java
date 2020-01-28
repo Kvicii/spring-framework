@@ -119,8 +119,15 @@ public abstract class AbstractUrlHandlerMapping extends AbstractHandlerMapping i
 	@Override
 	@Nullable
 	protected Object getHandlerInternal(HttpServletRequest request) throws Exception {
+		/**
+		 * 从request中获取请求的URL路径
+		 */
 		String lookupPath = getUrlPathHelper().getLookupPathForRequest(request);
 		request.setAttribute(LOOKUP_PATH, lookupPath);
+		/**
+		 * 将得到的URL路径与Handler进行匹配 得到对应的Handler
+		 * 如果没有对应的Handler lookupHandler会返回null 这样默认的Handler会被使用
+		 */
 		Object handler = lookupHandler(lookupPath, request);
 		if (handler == null) {
 			// We need to care for the default handler directly, since we need to
@@ -152,6 +159,7 @@ public abstract class AbstractUrlHandlerMapping extends AbstractHandlerMapping i
 	 * both "/test" and "/team". For details, see the AntPathMatcher class.
 	 * <p>Looks for the most exact pattern, where most exact is defined as
 	 * the longest path pattern.
+	 * 该方法会根据URL路径在handlerMap中进行检索 最终返回Handler对象
 	 *
 	 * @param urlPath the URL the bean is mapped to
 	 * @param request current HTTP request (to expose the path within the mapping to)
@@ -228,7 +236,6 @@ public abstract class AbstractUrlHandlerMapping extends AbstractHandlerMapping i
 			}
 			return buildPathExposingHandler(handler, bestMatch, pathWithinMapping, uriTemplateVariables);
 		}
-
 		// No handler found...
 		return null;
 	}
