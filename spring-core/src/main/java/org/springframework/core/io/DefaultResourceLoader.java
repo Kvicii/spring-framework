@@ -165,7 +165,7 @@ public class DefaultResourceLoader implements ResourceLoader {
 		 * getResourceByPath()常常会用子类来实现
 		 */
 		if (location.startsWith("/")) {
-			return getResourfceByPath(location);
+			return getResourceByPath(location);
 		} else if (location.startsWith(CLASSPATH_URL_PREFIX)) {
 			/**
 			 * 处理带有classpath标识的Resource

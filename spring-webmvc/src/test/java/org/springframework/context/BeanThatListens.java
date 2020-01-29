@@ -16,6 +16,8 @@
 
 package org.springframework.context;
 
+import org.springframework.context.testfixture.beans.BeanThatBroadcasts;
+
 import java.util.Map;
 
 /**
