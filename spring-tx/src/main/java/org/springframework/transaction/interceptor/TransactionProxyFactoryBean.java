@@ -16,8 +16,6 @@
 
 package org.springframework.transaction.interceptor;
 
-import java.util.Properties;
-
 import org.springframework.aop.Pointcut;
 import org.springframework.aop.framework.AbstractSingletonProxyFactoryBean;
 import org.springframework.aop.framework.ProxyFactory;
@@ -28,6 +26,8 @@ import org.springframework.beans.factory.FactoryBean;
 import org.springframework.beans.factory.ListableBeanFactory;
 import org.springframework.lang.Nullable;
 import org.springframework.transaction.PlatformTransactionManager;
+
+import java.util.Properties;
 
 /**
  * Proxy factory bean for simplified declarative transaction handling.
@@ -104,26 +104,29 @@ import org.springframework.transaction.PlatformTransactionManager;
  * @author Dmitriy Kopylenko
  * @author Rod Johnson
  * @author Chris Beams
- * @since 21.08.2003
  * @see #setTransactionManager
  * @see #setTarget
  * @see #setTransactionAttributes
  * @see TransactionInterceptor
  * @see org.springframework.aop.framework.ProxyFactoryBean
+ * @since 21.08.2003
  */
 @SuppressWarnings("serial")
 public class TransactionProxyFactoryBean extends AbstractSingletonProxyFactoryBean
 		implements BeanFactoryAware {
 
+	/**
+	 * 该拦截器通过AOP发挥作用 通过这个拦截器Spring封装了事务处理实现
+	 */
 	private final TransactionInterceptor transactionInterceptor = new TransactionInterceptor();
 
 	@Nullable
 	private Pointcut pointcut;
 
-
 	/**
 	 * Set the default transaction manager. This will perform actual
 	 * transaction management: This class is just a way of invoking it.
+	 *
 	 * @see TransactionInterceptor#setTransactionManager
 	 */
 	public void setTransactionManager(PlatformTransactionManager transactionManager) {
@@ -138,6 +141,10 @@ public class TransactionProxyFactoryBean extends AbstractSingletonProxyFactoryBe
 	 * no matter if defined in an interface or the class itself.
 	 * <p>Internally, a NameMatchTransactionAttributeSource will be
 	 * created from the given properties.
+	 * <p>
+	 * 通过依赖注入的事务属性以properties形式出现
+	 * 把从BeanDefinition中读到的事务管理的属性信息注入到TransactionInterceptor中
+	 *
 	 * @see #setTransactionAttributeSource
 	 * @see TransactionInterceptor#setTransactionAttributes
 	 * @see TransactionAttributeEditor
@@ -151,6 +158,7 @@ public class TransactionProxyFactoryBean extends AbstractSingletonProxyFactoryBe
 	 * Set the transaction attribute source which is used to find transaction
 	 * attributes. If specifying a String property value, a PropertyEditor
 	 * will create a MethodMapTransactionAttributeSource from the value.
+	 *
 	 * @see #setTransactionAttributes
 	 * @see TransactionInterceptor#setTransactionAttributeSource
 	 * @see TransactionAttributeSourceEditor
@@ -166,6 +174,7 @@ public class TransactionProxyFactoryBean extends AbstractSingletonProxyFactoryBe
 	 * Set a pointcut, i.e a bean that can cause conditional invocation
 	 * of the TransactionInterceptor depending on method and attributes passed.
 	 * Note: Additional interceptors are always invoked.
+	 *
 	 * @see #setPreInterceptors
 	 * @see #setPostInterceptors
 	 */
@@ -177,6 +186,7 @@ public class TransactionProxyFactoryBean extends AbstractSingletonProxyFactoryBe
 	 * This callback is optional: If running in a BeanFactory and no transaction
 	 * manager has been set explicitly, a single matching bean of type
 	 * {@link PlatformTransactionManager} will be fetched from the BeanFactory.
+	 *
 	 * @see org.springframework.beans.factory.BeanFactory#getBean(Class)
 	 * @see org.springframework.transaction.PlatformTransactionManager
 	 */
@@ -188,15 +198,22 @@ public class TransactionProxyFactoryBean extends AbstractSingletonProxyFactoryBe
 
 	/**
 	 * Creates an advisor for this FactoryBean's TransactionInterceptor.
+	 * 创建Spring AOP对事务处理的Advisor
 	 */
 	@Override
 	protected Object createMainInterceptor() {
 		this.transactionInterceptor.afterPropertiesSet();
 		if (this.pointcut != null) {
+			/**
+			 * 使用默认的通知器DefaultPointcutAdvisor 为通知器配置事务处理拦截器
+			 */
 			return new DefaultPointcutAdvisor(this.pointcut, this.transactionInterceptor);
-		}
-		else {
-			// Rely on default pointcut.
+		} else {
+			/**
+			 * Rely on default pointcut.
+			 * 如果没有配置PointCut 使用TransactionAttributeSourceAdvisor作为通知器
+			 * 为通知器配置TransactionInterceptor作为拦截器
+			 */
 			return new TransactionAttributeSourceAdvisor(this.transactionInterceptor);
 		}
 	}
