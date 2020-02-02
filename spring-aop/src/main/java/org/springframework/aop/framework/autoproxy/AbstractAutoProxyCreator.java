@@ -249,6 +249,13 @@ public abstract class AbstractAutoProxyCreator extends ProxyProcessorSupport
 		return wrapIfNecessary(bean, beanName, cacheKey);
 	}
 
+	/**
+	 * 扫描@Aspect注解的拦截器 获取Advisor放到cache里 返回proxy
+	 *
+	 * @param beanClass the class of the bean to be instantiated
+	 * @param beanName  the name of the bean
+	 * @return
+	 */
 	@Override
 	public Object postProcessBeforeInstantiation(Class<?> beanClass, String beanName) {
 		Object cacheKey = getCacheKey(beanClass, beanName);
@@ -298,6 +305,8 @@ public abstract class AbstractAutoProxyCreator extends ProxyProcessorSupport
 	/**
 	 * Create a proxy with the configured interceptors if the bean is
 	 * identified as one to proxy by the subclass.
+	 * <p>
+	 * 增强的织入 生成强化对象
 	 *
 	 * @see #getAdvicesAndAdvisorsForBean
 	 */
@@ -336,6 +345,8 @@ public abstract class AbstractAutoProxyCreator extends ProxyProcessorSupport
 
 	/**
 	 * Wrap the given bean if necessary, i.e. if it is eligible for being proxied.
+	 * <p>
+	 * 返回增强后的代理对象
 	 *
 	 * @param bean     the raw bean instance
 	 * @param beanName the name of the bean
