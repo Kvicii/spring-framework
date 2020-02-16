@@ -1,4 +1,4 @@
-package org.springframework.tests.context;
+package org.springframework.tests.context.dependency;
 
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.ListableBeanFactory;
@@ -12,7 +12,7 @@ import java.util.Map;
 /**
  * @author kyushu
  * @date 2020/2/16 13:08
- * @description Bean的查找
+ * @description 依赖的查找
  */
 public class TestBeanLookUp {
 
