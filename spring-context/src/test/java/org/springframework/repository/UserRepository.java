@@ -16,7 +16,7 @@ public class UserRepository {
 
 	private Collection<User> users;	// 自定义Bean
 
-	private BeanFactory beanFactory;	// 内建Bean
+	private BeanFactory beanFactory;	// 内建依赖
 
 	private ObjectFactory<ApplicationContext> objectFactory;
 
