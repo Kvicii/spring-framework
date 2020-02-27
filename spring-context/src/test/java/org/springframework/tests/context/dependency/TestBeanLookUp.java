@@ -19,11 +19,9 @@ public class TestBeanLookUp {
 	public static void main(String[] args) {
 		BeanFactory beanFactory = new ClassPathXmlApplicationContext("classpath:/org/springframework/tests.context/beans-look-up.xml");
 
-//		findBeanByName(beanFactory);
-//		findBeanByLazyTime(beanFactory);
-//		findBeanByType(beanFactory);
-//		findCollectionBeanByType(beanFactory);
-		findBeanByAnnotation(beanFactory);
+		User aliasBean = beanFactory.getBean("kyushu-user", User.class);
+		User bean = beanFactory.getBean("user", User.class);
+		System.out.println(aliasBean == bean);
 	}
 
 	private static void findBeanByAnnotation(BeanFactory beanFactory) {

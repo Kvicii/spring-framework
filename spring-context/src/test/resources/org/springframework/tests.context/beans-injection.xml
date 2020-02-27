@@ -4,7 +4,7 @@
 	   xmlns:util="http://www.springframework.org/schema/util"
 	   xsi:schemaLocation="http://www.springframework.org/schema/beans https://www.springframework.org/schema/beans/spring-beans-2.0.xsd
            http://www.springframework.org/schema/util https://www.springframework.org/schema/util/spring-util-2.0.xsd">
-	<import resource="beans-look-up.xml"/>
+	<import resource="../../org/springframework/tests.context/beans-look-up.xml"/>
 
 	<bean id="userRepository" class="org.springframework.repository.UserRepository" autowire="byType">
 		<!--手动注入-->

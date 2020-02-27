@@ -16,5 +16,19 @@
 		<property name="level" value="member"/>
 	</bean>
 
-	<alias name="user" alias="kyushu-user"/>
+	<!--静态方法实例化-->
+	<bean id="instance-user" class="org.springframework.domain.User"
+		  factory-method="createUser"/>
+	<!--<alias name="user" alias="kyushu-user"/>-->
+	<!--工厂方式实例化-->
+	<bean id="user-factory" factory-bean="userFactory" factory-method="createUser"/>
+	<bean id="userFactory" class="org.springframework.tests.factory.DefaultUserFactory"/>
+
+	<!--FactoryBean实例化-->
+	<bean id="factory-user" class="org.springframework.tests.factory.UserFactoryBean"/>
+
+	<bean id="user-factory-service-loader"
+		  class="org.springframework.beans.factory.serviceloader.ServiceLoaderFactoryBean">
+		<property name="serviceType" value="org.springframework.tests.factory.UserFactory"/>
+	</bean>
 </beans>

@@ -16,7 +16,7 @@ public class TestBeanInjection {
 
 	public static void main(String[] args) {
 
-		BeanFactory beanFactory = new ClassPathXmlApplicationContext("classpath:/org/springframework/tests.context/beans-injection.xml");
+		BeanFactory beanFactory = new ClassPathXmlApplicationContext("classpath:/META-INF/services/beans-injection.xml");
 		UserRepository userRepository = (UserRepository) beanFactory.getBean("userRepository");
 //		System.out.println(userRepository.getUsers());
 //		依赖注入
