@@ -47,6 +47,8 @@ import org.springframework.lang.Nullable;
  * synchronization of bean creation. There is usually no need for internal
  * synchronization other than for purposes of lazy initialization within the
  * FactoryBean itself (or the like).
+ * <p>
+ * 自定义Bean的创建过程以完成复杂Bean的定义
  *
  * @param <T> the bean type
  * @author Rod Johnson
@@ -83,6 +85,9 @@ public interface FactoryBean<T> {
 	 * will not throw a FactoryBeanNotInitializedException in this case anymore.
 	 * FactoryBean implementations are encouraged to throw
 	 * FactoryBeanNotInitializedException themselves now, as appropriate.
+	 * <p>
+	 * 返回FactoryBean创建的对象
+	 * isSingleton()返回true 将实例放到spring的单例缓存池
 	 *
 	 * @return an instance of the bean (can be {@code null})
 	 * @throws Exception in case of creation errors
@@ -106,6 +111,7 @@ public interface FactoryBean<T> {
 	 * <p><b>NOTE:</b> Autowiring will simply ignore FactoryBeans that return
 	 * {@code null} here. Therefore it is highly recommended to implement
 	 * this method properly, using the current state of the FactoryBean.
+	 * 返回创建Bean的类型
 	 *
 	 * @return the type of object that this FactoryBean creates,
 	 * or {@code null} if not known at the time of the call
@@ -143,5 +149,4 @@ public interface FactoryBean<T> {
 	default boolean isSingleton() {
 		return true;
 	}
-
 }

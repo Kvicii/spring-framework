@@ -945,6 +945,7 @@ public abstract class AbstractBeanDefinition extends BeanMetadataAttributeAccess
 	/**
 	 * Set the name of the initializer method.
 	 * <p>The default is {@code null} in which case there is no initializer method.
+	 * 从1.0已经实现了
 	 */
 	@Override
 	public void setInitMethodName(@Nullable String initMethodName) {

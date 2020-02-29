@@ -17,4 +17,9 @@
 	</bean>
 
 	<alias name="user" alias="kyushu-user"/>
+
+	<!--FactoryBean获取复杂对象-->
+	<bean id="userFactoryBean" class="org.springframework.tests.factory.UserFactoryBean">
+		<property name="userInfo" value="1001,Kyushu"/>
+	</bean>
 </beans>
