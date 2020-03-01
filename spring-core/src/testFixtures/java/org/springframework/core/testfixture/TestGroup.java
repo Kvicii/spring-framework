@@ -67,7 +67,7 @@ public enum TestGroup {
 	 * order to avoid a {@link NoClassDefFoundError} being thrown while attempting
 	 * to load collaborator classes.
 	 */
-	static Set<TestGroup> loadTestGroups() {
+	public static Set<TestGroup> loadTestGroups() {
 		try {
 			return TestGroup.parse(System.getProperty(TEST_GROUPS_SYSTEM_PROPERTY));
 		}

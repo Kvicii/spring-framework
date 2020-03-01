@@ -36,6 +36,9 @@ task objenesisRepackJar(type: ShadowJar) {
 }
 
 dependencies {
+	// https://mvnrepository.com/artifact/org.junit.jupiter/junit-jupiter-api
+	testCompile group: 'org.junit.jupiter', name: 'junit-jupiter-api', version: '5.6.0'
+
 	cglib("cglib:cglib:${cglibVersion}@jar")
 	objenesis("org.objenesis:objenesis:${objenesisVersion}@jar")
 	coroutines(project(path: ":kotlin-coroutines", configuration: 'classesOnlyElements'))
