@@ -14,33 +14,16 @@
  * limitations under the License.
  */
 
-package org.springframework.messaging.simp;
+package org.springframework.context.annotation.componentscan.gh24375;
 
-/**
- * A generic representation of different kinds of messages found in simple messaging
- * protocols like STOMP.
- *
- * @author Rossen Stoyanchev
- * @since 4.0
- */
-public enum SimpMessageType {
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
-	CONNECT,
+@Target(ElementType.ANNOTATION_TYPE)
+@Retention(RetentionPolicy.RUNTIME)
+public @interface B {
 
-	CONNECT_ACK,
-
-	MESSAGE,
-
-	SUBSCRIBE,
-
-	UNSUBSCRIBE,
-
-	HEARTBEAT,
-
-	DISCONNECT,
-
-	DISCONNECT_ACK,
-
-	OTHER
-
+	String name() default "";
 }

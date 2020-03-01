@@ -16,16 +16,20 @@
 
 package org.springframework.test.web.servlet.samples.spr;
 
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Controller;
-import org.springframework.test.context.junit.jupiter.web.SpringJUnitWebConfig;
+import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.test.context.web.WebAppConfiguration;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.ControllerAdvice;
@@ -36,7 +40,7 @@ import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.context.annotation.RequestScope;
 import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.Assert.assertEquals;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.forwardedUrl;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -51,52 +55,56 @@ import static org.springframework.test.web.servlet.setup.MockMvcBuilders.webAppC
  * @author Sam Brannen
  * @since 5.1.12
  */
-@SpringJUnitWebConfig
-class ControllerAdviceIntegrationTests {
+@RunWith(SpringRunner.class)
+@WebAppConfiguration
+public class ControllerAdviceIntegrationTests {
+
+	@Autowired
+	WebApplicationContext wac;
 
 	MockMvc mockMvc;
 
-	@BeforeEach
-	void setUpMockMvc(WebApplicationContext wac) {
+	@Before
+	public void setUpMockMvc() {
 		this.mockMvc = webAppContextSetup(wac).build();
 		resetCounters();
 	}
 
 	@Test
-	void controllerAdviceIsAppliedOnlyOnce() throws Exception {
+	public void controllerAdviceIsAppliedOnlyOnce() throws Exception {
 		this.mockMvc.perform(get("/test").param("requestParam", "foo"))//
 				.andExpect(status().isOk())//
 				.andExpect(forwardedUrl("singleton:1;prototype:1;request-scoped:1;requestParam:foo"));
 
-		assertThat(SingletonControllerAdvice.invocationCount).hasValue(1);
-		assertThat(PrototypeControllerAdvice.invocationCount).hasValue(1);
-		assertThat(RequestScopedControllerAdvice.invocationCount).hasValue(1);
+		assertEquals(1, SingletonControllerAdvice.invocationCount.get());
+		assertEquals(1, PrototypeControllerAdvice.invocationCount.get());
+		assertEquals(1, RequestScopedControllerAdvice.invocationCount.get());
 	}
 
 	@Test
-	void prototypeAndRequestScopedControllerAdviceBeansAreNotCached() throws Exception {
+	public void prototypeAndRequestScopedControllerAdviceBeansAreNotCached() throws Exception {
 		this.mockMvc.perform(get("/test").param("requestParam", "foo"))//
 				.andExpect(status().isOk())//
 				.andExpect(forwardedUrl("singleton:1;prototype:1;request-scoped:1;requestParam:foo"));
 
 		// singleton @ControllerAdvice beans should not be instantiated again.
-		assertThat(SingletonControllerAdvice.instanceCount).hasValue(0);
+		assertEquals(0, SingletonControllerAdvice.instanceCount.get());
 		// prototype and request-scoped @ControllerAdvice beans should be instantiated once per request.
-		assertThat(PrototypeControllerAdvice.instanceCount).hasValue(1);
-		assertThat(RequestScopedControllerAdvice.instanceCount).hasValue(1);
+		assertEquals(1, PrototypeControllerAdvice.instanceCount.get());
+		assertEquals(1, RequestScopedControllerAdvice.instanceCount.get());
 
 		this.mockMvc.perform(get("/test").param("requestParam", "bar"))//
 				.andExpect(status().isOk())//
 				.andExpect(forwardedUrl("singleton:2;prototype:2;request-scoped:2;requestParam:bar"));
 
 		// singleton @ControllerAdvice beans should not be instantiated again.
-		assertThat(SingletonControllerAdvice.instanceCount).hasValue(0);
+		assertEquals(0, SingletonControllerAdvice.instanceCount.get());
 		// prototype and request-scoped @ControllerAdvice beans should be instantiated once per request.
-		assertThat(PrototypeControllerAdvice.instanceCount).hasValue(2);
-		assertThat(RequestScopedControllerAdvice.instanceCount).hasValue(2);
+		assertEquals(2, PrototypeControllerAdvice.instanceCount.get());
+		assertEquals(2, RequestScopedControllerAdvice.instanceCount.get());
 	}
 
-	private void resetCounters() {
+	private static void resetCounters() {
 		SingletonControllerAdvice.invocationCount.set(0);
 		SingletonControllerAdvice.instanceCount.set(0);
 		PrototypeControllerAdvice.invocationCount.set(0);
@@ -104,6 +112,7 @@ class ControllerAdviceIntegrationTests {
 		RequestScopedControllerAdvice.invocationCount.set(0);
 		RequestScopedControllerAdvice.instanceCount.set(0);
 	}
+
 
 	@Configuration
 	@EnableWebMvc
@@ -186,10 +195,11 @@ class ControllerAdviceIntegrationTests {
 
 		@GetMapping("/test")
 		String get(Model model) {
-			return "singleton:" + model.getAttribute("singleton") +
-					";prototype:" + model.getAttribute("prototype") +
-					";request-scoped:" + model.getAttribute("request-scoped") +
-					";requestParam:" + model.getAttribute("requestParam");
+			Map<String, Object> map = model.asMap();
+			return "singleton:" + map.get("singleton") +
+					";prototype:" + map.get("prototype") +
+					";request-scoped:" + map.get("request-scoped") +
+					";requestParam:" + map.get("requestParam");
 		}
 	}
 

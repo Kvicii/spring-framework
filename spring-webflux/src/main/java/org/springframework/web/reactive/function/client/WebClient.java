@@ -31,12 +31,10 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import org.springframework.core.ParameterizedTypeReference;
-import org.springframework.core.ReactiveAdapterRegistry;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
 import org.springframework.http.client.reactive.ClientHttpConnector;
 import org.springframework.http.client.reactive.ClientHttpRequest;
 import org.springframework.http.codec.ClientCodecConfigurer;
@@ -60,13 +58,13 @@ import org.springframework.web.util.UriBuilderFactory;
  * </ul>
  * <p>For examples with a request body see:
  * <ul>
- * <li>{@link RequestBodySpec#bodyValue(Object) bodyValue(Object)}
  * <li>{@link RequestBodySpec#body(Publisher, Class) body(Publisher,Class)}
+ * <li>{@link RequestBodySpec#syncBody(Object) syncBody(Object)}
+ * <li>{@link RequestBodySpec#body(BodyInserter) body(BodyInserter)}
  * </ul>
  *
  * @author Rossen Stoyanchev
  * @author Arjen Poutsma
- * @author Sebastien Deleuze
  * @author Brian Clozel
  * @since 5.0
  */
@@ -197,7 +195,7 @@ public interface WebClient {
 		 *         .retrieve()
 		 *         .bodyToFlux(Account.class);
 		 *
-		 * // Result: https://abc.com/v2/accounts?q=12
+		 * // Result: https://abc.go.com/v2/accounts?q=12
 		 * </pre>
 		 *
 		 * @see #defaultUriVariables(Map)
@@ -266,7 +264,7 @@ public interface WebClient {
 		Builder defaultRequest(Consumer<RequestHeadersSpec<?>> defaultRequest);
 
 		/**
-		 * Add the given filter to the end of the filter chain.
+		 * Add the given filter to the filter chain.
 		 * @param filter the filter to be added to the chain
 		 */
 		Builder filter(ExchangeFilterFunction filter);
@@ -376,15 +374,8 @@ public interface WebClient {
 		S uri(String uri, Map<String, ?> uriVariables);
 
 		/**
-		 * Specify the URI starting with a URI template and finishing off with a
-		 * {@link UriBuilder} created from the template.
-		 * @since 5.2
-		 */
-		S uri(String uri, Function<UriBuilder, URI> uriFunction);
-
-		/**
-		 * Specify the URI by through a {@link UriBuilder}.
-		 * @see #uri(String, Function)
+		 * Build the URI for the request using the {@link UriBuilderFactory}
+		 * configured for this client.
 		 */
 		S uri(Function<UriBuilder, URI> uriFunction);
 	}
@@ -509,15 +500,9 @@ public interface WebClient {
 		 *     .exchange()
 		 *     .flatMapMany(response -&gt; response.bodyToFlux(Person.class));
 		 * </pre>
-		 * <p><strong>NOTE:</strong> Unlike {@link #retrieve()}, when using
-		 * {@code exchange()}, it is the responsibility of the application to
-		 * consume any response content regardless of the scenario (success,
-		 * error, unexpected data, etc). Not doing so can cause a memory leak.
-		 * See {@link ClientResponse} for a list of all the available options
-		 * for consuming the body. Generally prefer using {@link #retrieve()}
-		 * unless you have a good reason to use {@code exchange()} which does
-		 * allow to check the response status and headers before deciding how or
-		 * if to consume the response.
+		 * <p><strong>NOTE:</strong> You must always use one of the body or
+		 * entity methods of the response to ensure resources are released.
+		 * See {@link ClientResponse} for more details.
 		 * @return a {@code Mono} for the response
 		 * @see #retrieve()
 		 */
@@ -549,33 +534,17 @@ public interface WebClient {
 		RequestBodySpec contentType(MediaType contentType);
 
 		/**
-		 * Shortcut for {@link #body(BodyInserter)} with a
-		 * {@linkplain BodyInserters#fromValue value inserter}.
-		 * For example:
-		 * <p><pre class="code">
-		 * Person person = ... ;
-		 *
-		 * Mono&lt;Void&gt; result = client.post()
-		 *     .uri("/persons/{id}", id)
-		 *     .contentType(MediaType.APPLICATION_JSON)
-		 *     .bodyValue(person)
-		 *     .retrieve()
-		 *     .bodyToMono(Void.class);
-		 * </pre>
-		 * <p>For multipart requests consider providing
-		 * {@link org.springframework.util.MultiValueMap MultiValueMap} prepared
-		 * with {@link org.springframework.http.client.MultipartBodyBuilder
-		 * MultipartBodyBuilder}.
-		 * @param body the value to write to the request body
+		 * Set the body of the request using the given body inserter.
+		 * {@link BodyInserters} provides access to built-in implementations of
+		 * {@link BodyInserter}.
+		 * @param inserter the body inserter to use for the request body
 		 * @return this builder
-		 * @throws IllegalArgumentException if {@code body} is a
-		 * {@link Publisher} or producer known to {@link ReactiveAdapterRegistry}
-		 * @since 5.2
+		 * @see org.springframework.web.reactive.function.BodyInserters
 		 */
-		RequestHeadersSpec<?> bodyValue(Object body);
+		RequestHeadersSpec<?> body(BodyInserter<?, ? super ClientHttpRequest> inserter);
 
 		/**
-		 * Shortcut for {@link #body(BodyInserter)} with a
+		 * A shortcut for {@link #body(BodyInserter)} with a
 		 * {@linkplain BodyInserters#fromPublisher Publisher inserter}.
 		 * For example:
 		 * <p><pre>
@@ -589,7 +558,7 @@ public interface WebClient {
 		 *     .bodyToMono(Void.class);
 		 * </pre>
 		 * @param publisher the {@code Publisher} to write to the request
-		 * @param elementClass the type of elements published
+		 * @param elementClass the class of elements contained in the publisher
 		 * @param <T> the type of the elements contained in the publisher
 		 * @param <P> the type of the {@code Publisher}
 		 * @return this builder
@@ -597,55 +566,43 @@ public interface WebClient {
 		<T, P extends Publisher<T>> RequestHeadersSpec<?> body(P publisher, Class<T> elementClass);
 
 		/**
-		 * Variant of {@link #body(Publisher, Class)} that allows providing
-		 * element type information with generics.
+		 * A variant of {@link #body(Publisher, Class)} that allows providing
+		 * element type information that includes generics via a
+		 * {@link ParameterizedTypeReference}.
 		 * @param publisher the {@code Publisher} to write to the request
-		 * @param elementTypeRef the type of elements published
+		 * @param typeReference the type reference of elements contained in the publisher
 		 * @param <T> the type of the elements contained in the publisher
 		 * @param <P> the type of the {@code Publisher}
 		 * @return this builder
 		 */
 		<T, P extends Publisher<T>> RequestHeadersSpec<?> body(P publisher,
-				ParameterizedTypeReference<T> elementTypeRef);
+				ParameterizedTypeReference<T> typeReference);
 
 		/**
-		 * Variant of {@link #body(Publisher, Class)} that allows using any
-		 * producer that can be resolved to {@link Publisher} via
-		 * {@link ReactiveAdapterRegistry}.
-		 * @param producer the producer to write to the request
-		 * @param elementClass the type of elements produced
+		 * A shortcut for {@link #body(BodyInserter)} with an
+		 * {@linkplain BodyInserters#fromObject Object inserter}.
+		 * For example:
+		 * <p><pre class="code">
+		 * Person person = ... ;
+		 *
+		 * Mono&lt;Void&gt; result = client.post()
+		 *     .uri("/persons/{id}", id)
+		 *     .contentType(MediaType.APPLICATION_JSON)
+		 *     .syncBody(person)
+		 *     .retrieve()
+		 *     .bodyToMono(Void.class);
+		 * </pre>
+		 * <p>For multipart requests, provide a
+		 * {@link org.springframework.util.MultiValueMap MultiValueMap}. The
+		 * values in the {@code MultiValueMap} can be any Object representing
+		 * the body of the part, or an
+		 * {@link org.springframework.http.HttpEntity HttpEntity} representing
+		 * a part with body and headers. The {@code MultiValueMap} can be built
+		 * with {@link org.springframework.http.client.MultipartBodyBuilder
+		 * MultipartBodyBuilder}.
+		 * @param body the {@code Object} to write to the request
 		 * @return this builder
-		 * @since 5.2
 		 */
-		RequestHeadersSpec<?> body(Object producer, Class<?> elementClass);
-
-		/**
-		 * Variant of {@link #body(Publisher, ParameterizedTypeReference)} that
-		 * allows using any producer that can be resolved to {@link Publisher}
-		 * via {@link ReactiveAdapterRegistry}.
-		 * @param producer the producer to write to the request
-		 * @param elementTypeRef the type of elements produced
-		 * @return this builder
-		 * @since 5.2
-		 */
-		RequestHeadersSpec<?> body(Object producer, ParameterizedTypeReference<?> elementTypeRef);
-
-		/**
-		 * Set the body of the request using the given body inserter.
-		 * See {@link BodyInserters} for built-in {@link BodyInserter} implementations.
-		 * @param inserter the body inserter to use for the request body
-		 * @return this builder
-		 * @see org.springframework.web.reactive.function.BodyInserters
-		 */
-		RequestHeadersSpec<?> body(BodyInserter<?, ? super ClientHttpRequest> inserter);
-
-		/**
-		 * Shortcut for {@link #body(BodyInserter)} with a
-		 * {@linkplain BodyInserters#fromValue value inserter}.
-		 * As of 5.2 this method delegates to {@link #bodyValue(Object)}.
-		 * @deprecated as of Spring Framework 5.2 in favor of {@link #bodyValue(Object)}
-		 */
-		@Deprecated
 		RequestHeadersSpec<?> syncBody(Object body);
 	}
 
@@ -657,21 +614,17 @@ public interface WebClient {
 
 		/**
 		 * Register a custom error function that gets invoked when the given {@link HttpStatus}
-		 * predicate applies. Whatever exception is returned from the function (possibly using
-		 * {@link ClientResponse#createException()}) will also be returned as error signal
-		 * from {@link #bodyToMono(Class)} and {@link #bodyToFlux(Class)}.
-		 * <p>By default, an error handler is registered that returns a
+		 * predicate applies. The exception returned from the function will be returned from
+		 * {@link #bodyToMono(Class)} and {@link #bodyToFlux(Class)}.
+		 * <p>By default, an error handler is registered that throws a
 		 * {@link WebClientResponseException} when the response status code is 4xx or 5xx.
-		 * To override this default (and return a non-error response from {@code bodyOn*}), register
-		 * an exception function that returns an {@linkplain Mono#empty() empty} mono.
+		 * @param statusPredicate a predicate that indicates whether {@code exceptionFunction}
+		 * applies
 		 * <p><strong>NOTE:</strong> if the response is expected to have content,
 		 * the exceptionFunction should consume it. If not, the content will be
 		 * automatically drained to ensure resources are released.
-		 * @param statusPredicate a predicate that indicates whether {@code exceptionFunction}
-		 * applies
 		 * @param exceptionFunction the function that returns the exception
 		 * @return this builder
-		 * @see ClientResponse#createException()
 		 */
 		ResponseSpec onStatus(Predicate<HttpStatus> statusPredicate,
 				Function<ClientResponse, Mono<? extends Throwable>> exceptionFunction);
@@ -698,103 +651,45 @@ public interface WebClient {
 		 * Extract the body to a {@code Mono}. By default, if the response has status code 4xx or
 		 * 5xx, the {@code Mono} will contain a {@link WebClientException}. This can be overridden
 		 * with {@link #onStatus(Predicate, Function)}.
-		 * @param elementClass the expected response body element class
+		 * @param bodyType the expected response body type
 		 * @param <T> response body type
 		 * @return a mono containing the body, or a {@link WebClientResponseException} if the
 		 * status code is 4xx or 5xx
 		 */
-		<T> Mono<T> bodyToMono(Class<T> elementClass);
+		<T> Mono<T> bodyToMono(Class<T> bodyType);
 
 		/**
 		 * Extract the body to a {@code Mono}. By default, if the response has status code 4xx or
 		 * 5xx, the {@code Mono} will contain a {@link WebClientException}. This can be overridden
 		 * with {@link #onStatus(Predicate, Function)}.
-		 * @param elementTypeRef a type reference describing the expected response body element type
+		 * @param typeReference a type reference describing the expected response body type
 		 * @param <T> response body type
 		 * @return a mono containing the body, or a {@link WebClientResponseException} if the
 		 * status code is 4xx or 5xx
 		 */
-		<T> Mono<T> bodyToMono(ParameterizedTypeReference<T> elementTypeRef);
+		<T> Mono<T> bodyToMono(ParameterizedTypeReference<T> typeReference);
 
 		/**
 		 * Extract the body to a {@code Flux}. By default, if the response has status code 4xx or
 		 * 5xx, the {@code Flux} will contain a {@link WebClientException}. This can be overridden
          * with {@link #onStatus(Predicate, Function)}.
-		 * @param elementClass the class of elements in the response
+		 * @param elementType the type of element in the response
 		 * @param <T> the type of elements in the response
 		 * @return a flux containing the body, or a {@link WebClientResponseException} if the
 		 * status code is 4xx or 5xx
 		 */
-		<T> Flux<T> bodyToFlux(Class<T> elementClass);
+		<T> Flux<T> bodyToFlux(Class<T> elementType);
 
 		/**
 		 * Extract the body to a {@code Flux}. By default, if the response has status code 4xx or
 		 * 5xx, the {@code Flux} will contain a {@link WebClientException}. This can be overridden
          * with {@link #onStatus(Predicate, Function)}.
-		 * @param elementTypeRef a type reference describing the expected response body element type
+		 * @param typeReference a type reference describing the expected response body type
 		 * @param <T> the type of elements in the response
 		 * @return a flux containing the body, or a {@link WebClientResponseException} if the
 		 * status code is 4xx or 5xx
 		 */
-		<T> Flux<T> bodyToFlux(ParameterizedTypeReference<T> elementTypeRef);
-
-		/**
-		 * Return the response as a delayed {@code ResponseEntity}. By default, if the response has
-		 * status code 4xx or 5xx, the {@code Mono} will contain a {@link WebClientException}. This
-		 * can be overridden with {@link #onStatus(Predicate, Function)}.
-		 * @param bodyClass the expected response body type
-		 * @param <T> response body type
-		 * @return {@code Mono} with the {@code ResponseEntity}
-		 * @since 5.2
-		 */
-		<T> Mono<ResponseEntity<T>> toEntity(Class<T> bodyClass);
-
-		/**
-		 * Return the response as a delayed {@code ResponseEntity}. By default, if the response has
-		 * status code 4xx or 5xx, the {@code Mono} will contain a {@link WebClientException}. This
-		 * can be overridden with {@link #onStatus(Predicate, Function)}.
-		 * @param bodyTypeReference a type reference describing the expected response body type
-		 * @param <T> response body type
-		 * @return {@code Mono} with the {@code ResponseEntity}
-		 * @since 5.2
-		 */
-		<T> Mono<ResponseEntity<T>> toEntity(ParameterizedTypeReference<T> bodyTypeReference);
-
-		/**
-		 * Return the response as a delayed list of {@code ResponseEntity}s. By default, if the
-		 * response has status code 4xx or 5xx, the {@code Mono} will contain a
-		 * {@link WebClientException}. This can be overridden with
-		 * {@link #onStatus(Predicate, Function)}.
-		 * @param elementClass the expected response body list element class
-		 * @param <T> the type of elements in the list
-		 * @return {@code Mono} with the list of {@code ResponseEntity}s
-		 * @since 5.2
-		 */
-		<T> Mono<ResponseEntity<List<T>>> toEntityList(Class<T> elementClass);
-
-		/**
-		 * Return the response as a delayed list of {@code ResponseEntity}s. By default, if the
-		 * response has status code 4xx or 5xx, the {@code Mono} will contain a
-		 * {@link WebClientException}. This can be overridden with
-		 * {@link #onStatus(Predicate, Function)}.
-		 * @param elementTypeRef the expected response body list element reference type
-		 * @param <T> the type of elements in the list
-		 * @return {@code Mono} with the list of {@code ResponseEntity}s
-		 * @since 5.2
-		 */
-		<T> Mono<ResponseEntity<List<T>>> toEntityList(ParameterizedTypeReference<T> elementTypeRef);
-
-		/**
-		 * Return the response as a delayed {@code ResponseEntity} containing status and headers,
-		 * but no body.  By default, if the response has status code 4xx or 5xx, the {@code Mono}
-		 * will contain a {@link WebClientException}. This can be overridden with
-		 * {@link #onStatus(Predicate, Function)}.
-		 * Calling this method will {@linkplain ClientResponse#releaseBody() release} the body of
-		 * the response.
-		 * @return {@code Mono} with the bodiless {@code ResponseEntity}
-		 * @since 5.2
-		 */
-		Mono<ResponseEntity<Void>> toBodilessEntity();
+		<T> Flux<T> bodyToFlux(ParameterizedTypeReference<T> typeReference);
 	}
 
 
@@ -812,6 +707,5 @@ public interface WebClient {
 	 */
 	interface RequestBodyUriSpec extends RequestBodySpec, RequestHeadersUriSpec<RequestBodySpec> {
 	}
-
 
 }

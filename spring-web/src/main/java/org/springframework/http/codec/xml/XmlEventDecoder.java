@@ -42,7 +42,6 @@ import org.springframework.core.codec.AbstractDecoder;
 import org.springframework.core.io.buffer.DataBuffer;
 import org.springframework.core.io.buffer.DataBufferLimitException;
 import org.springframework.core.io.buffer.DataBufferUtils;
-import org.springframework.http.MediaType;
 import org.springframework.lang.Nullable;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.MimeType;
@@ -79,7 +78,6 @@ import org.springframework.util.xml.StaxUtils;
  * by other decoders which are registered by default.
  *
  * @author Arjen Poutsma
- * @author Sam Brannen
  * @since 5.0
  */
 public class XmlEventDecoder extends AbstractDecoder<XMLEvent> {
@@ -91,11 +89,11 @@ public class XmlEventDecoder extends AbstractDecoder<XMLEvent> {
 
 	boolean useAalto = aaltoPresent;
 
-	private int maxInMemorySize = 256 * 1024;
+	private int maxInMemorySize = -1;
 
 
 	public XmlEventDecoder() {
-		super(MimeTypeUtils.APPLICATION_XML, MimeTypeUtils.TEXT_XML, new MediaType("application", "*+xml"));
+		super(MimeTypeUtils.APPLICATION_XML, MimeTypeUtils.TEXT_XML);
 	}
 
 
@@ -104,7 +102,8 @@ public class XmlEventDecoder extends AbstractDecoder<XMLEvent> {
 	 * is either the size the entire input when decoding as a whole, or when
 	 * using async parsing via Aalto XML, it is size one top-level XML tree.
 	 * When the limit is exceeded, {@link DataBufferLimitException} is raised.
-	 * <p>By default this is set to 256K.
+	 * <p>By default in 5.1 this is set to -1, unlimited. In 5.2 the default
+	 * value for this limit is set to 256K.
 	 * @param byteCount the max number of bytes to buffer, or -1 for unlimited
 	 * @since 5.1.11
 	 */
@@ -122,7 +121,7 @@ public class XmlEventDecoder extends AbstractDecoder<XMLEvent> {
 
 
 	@Override
-	@SuppressWarnings({"rawtypes", "unchecked", "cast"})  // XMLEventReader is Iterator<Object> on JDK 9
+	@SuppressWarnings({"rawtypes", "unchecked"})  // on JDK 9 where XMLEventReader is Iterator<Object>
 	public Flux<XMLEvent> decode(Publisher<DataBuffer> input, ResolvableType elementType,
 			@Nullable MimeType mimeType, @Nullable Map<String, Object> hints) {
 
@@ -133,7 +132,7 @@ public class XmlEventDecoder extends AbstractDecoder<XMLEvent> {
 					.doFinally(signalType -> mapper.endOfInput());
 		}
 		else {
-			return DataBufferUtils.join(input, this.maxInMemorySize)
+			return DataBufferUtils.join(input, getMaxInMemorySize())
 					.flatMapIterable(buffer -> {
 						try {
 							InputStream is = buffer.asInputStream();
@@ -244,7 +243,5 @@ public class XmlEventDecoder extends AbstractDecoder<XMLEvent> {
 			this.streamReader.getInputFeeder().endOfInput();
 		}
 	}
-
-
 
 }

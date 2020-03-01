@@ -154,6 +154,21 @@ public class ServletInvocableHandlerMethodTests {
 				.isEqualTo(true);
 	}
 
+	@Test // gh-23775
+	public void invokeAndHandle_VoidNotModifiedWithEtag() throws Exception {
+		String etag = "\"deadb33f8badf00d\"";
+		this.request.addHeader(HttpHeaders.IF_NONE_MATCH, etag);
+		this.webRequest.checkNotModified(etag);
+
+		ServletInvocableHandlerMethod handlerMethod = getHandlerMethod(new Handler(), "notModified");
+		handlerMethod.invokeAndHandle(this.webRequest, this.mavContainer);
+
+		assertTrue("Null return value + 'not modified' request should result in 'request handled'",
+				this.mavContainer.isRequestHandled());
+
+		assertEquals(true, this.request.getAttribute(ShallowEtagHeaderFilter.class.getName() + ".STREAMING"));
+	}
+
 	@Test  // SPR-9159
 	public void invokeAndHandle_NotVoidWithResponseStatusAndReason() throws Exception {
 		ServletInvocableHandlerMethod handlerMethod = getHandlerMethod(new Handler(), "responseStatusWithReason");

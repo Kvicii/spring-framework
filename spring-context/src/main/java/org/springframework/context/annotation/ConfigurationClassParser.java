@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-2019 the original author or authors.
+ * Copyright 2002-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -33,7 +33,6 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.StringJoiner;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -139,8 +138,6 @@ class ConfigurationClassParser {
 	private final ImportStack importStack = new ImportStack();
 
 	private final DeferredImportSelectorHandler deferredImportSelectorHandler = new DeferredImportSelectorHandler();
-
-	private final SourceClass objectSourceClass = new SourceClass(Object.class);
 
 
 	/**
@@ -559,8 +556,9 @@ class ConfigurationClassParser {
 					if (candidate.isAssignable(ImportSelector.class)) {
 						// Candidate class is an ImportSelector -> delegate to it to determine imports
 						Class<?> candidateClass = candidate.loadClass();
-						ImportSelector selector = ParserStrategyUtils.instantiateClass(candidateClass, ImportSelector.class,
-								this.environment, this.resourceLoader, this.registry);
+						ImportSelector selector = BeanUtils.instantiateClass(candidateClass, ImportSelector.class);
+						ParserStrategyUtils.invokeAwareMethods(
+								selector, this.environment, this.resourceLoader, this.registry);
 						if (selector instanceof DeferredImportSelector) {
 							this.deferredImportSelectorHandler.handle(configClass, (DeferredImportSelector) selector);
 						}
@@ -575,8 +573,9 @@ class ConfigurationClassParser {
 						// delegate to it to register additional bean definitions
 						Class<?> candidateClass = candidate.loadClass();
 						ImportBeanDefinitionRegistrar registrar =
-								ParserStrategyUtils.instantiateClass(candidateClass, ImportBeanDefinitionRegistrar.class,
-										this.environment, this.resourceLoader, this.registry);
+								BeanUtils.instantiateClass(candidateClass, ImportBeanDefinitionRegistrar.class);
+						ParserStrategyUtils.invokeAwareMethods(
+								registrar, this.environment, this.resourceLoader, this.registry);
 						configClass.addImportBeanDefinitionRegistrar(registrar, currentSourceClass.getMetadata());
 					}
 					else {
@@ -636,13 +635,13 @@ class ConfigurationClassParser {
 	 * Factory method to obtain a {@link SourceClass} from a {@link Class}.
 	 */
 	SourceClass asSourceClass(@Nullable Class<?> classType) throws IOException {
-		if (classType == null || classType.getName().startsWith("java.lang.annotation.")) {
-			return this.objectSourceClass;
+		if (classType == null) {
+			return new SourceClass(Object.class);
 		}
 		try {
 			// Sanity test that we can reflectively read annotations,
 			// including Class attributes; if not -> fall back to ASM
-			for (Annotation ann : classType.getDeclaredAnnotations()) {
+			for (Annotation ann : classType.getAnnotations()) {
 				AnnotationUtils.validateAnnotation(ann);
 			}
 			return new SourceClass(classType);
@@ -668,22 +667,19 @@ class ConfigurationClassParser {
 	 * Factory method to obtain a {@link SourceClass} from a class name.
 	 */
 	SourceClass asSourceClass(@Nullable String className) throws IOException {
-		if (className == null || className.startsWith("java.lang.annotation.")) {
-			return this.objectSourceClass;
+		if (className == null) {
+			return new SourceClass(Object.class);
 		}
 		if (className.startsWith("java")) {
 			// Never use ASM for core java types
 			try {
-				return new SourceClass(ClassUtils.forName(className,
-						this.resourceLoader.getClassLoader()));
+				return new SourceClass(ClassUtils.forName(className, this.resourceLoader.getClassLoader()));
 			}
 			catch (ClassNotFoundException ex) {
-				throw new NestedIOException(
-						"Failed to load class [" + className + "]", ex);
+				throw new NestedIOException("Failed to load class [" + className + "]", ex);
 			}
 		}
-		return new SourceClass(
-				this.metadataReaderFactory.getMetadataReader(className));
+		return new SourceClass(this.metadataReaderFactory.getMetadataReader(className));
 	}
 
 
@@ -725,11 +721,15 @@ class ConfigurationClassParser {
 		 */
 		@Override
 		public String toString() {
-			StringJoiner joiner = new StringJoiner("->", "[", "]");
-			for (ConfigurationClass configurationClass : this) {
-				joiner.add(configurationClass.getSimpleName());
+			StringBuilder builder = new StringBuilder("[");
+			Iterator<ConfigurationClass> iterator = iterator();
+			while (iterator.hasNext()) {
+				builder.append(iterator.next().getSimpleName());
+				if (iterator.hasNext()) {
+					builder.append("->");
+				}
 			}
-			return joiner.toString();
+			return builder.append(']').toString();
 		}
 	}
 
@@ -748,8 +748,7 @@ class ConfigurationClassParser {
 		 * @param importSelector the selector to handle
 		 */
 		public void handle(ConfigurationClass configClass, DeferredImportSelector importSelector) {
-			DeferredImportSelectorHolder holder = new DeferredImportSelectorHolder(
-					configClass, importSelector);
+			DeferredImportSelectorHolder holder = new DeferredImportSelectorHolder(configClass, importSelector);
 			if (this.deferredImportSelectors == null) {
 				DeferredImportSelectorGroupingHandler handler = new DeferredImportSelectorGroupingHandler();
 				handler.register(holder);
@@ -775,7 +774,6 @@ class ConfigurationClassParser {
 				this.deferredImportSelectors = new ArrayList<>();
 			}
 		}
-
 	}
 
 
@@ -786,8 +784,7 @@ class ConfigurationClassParser {
 		private final Map<AnnotationMetadata, ConfigurationClass> configurationClasses = new HashMap<>();
 
 		public void register(DeferredImportSelectorHolder deferredImport) {
-			Class<? extends Group> group = deferredImport.getImportSelector()
-					.getImportGroup();
+			Class<? extends Group> group = deferredImport.getImportSelector().getImportGroup();
 			DeferredImportSelectorGrouping grouping = this.groupings.computeIfAbsent(
 					(group != null ? group : deferredImport),
 					key -> new DeferredImportSelectorGrouping(createGroup(group)));
@@ -799,8 +796,7 @@ class ConfigurationClassParser {
 		public void processGroupImports() {
 			for (DeferredImportSelectorGrouping grouping : this.groupings.values()) {
 				grouping.getImports().forEach(entry -> {
-					ConfigurationClass configurationClass = this.configurationClasses.get(
-							entry.getMetadata());
+					ConfigurationClass configurationClass = this.configurationClasses.get(entry.getMetadata());
 					try {
 						processImports(configurationClass, asSourceClass(configurationClass),
 								asSourceClasses(entry.getImportClassName()), false);
@@ -818,15 +814,14 @@ class ConfigurationClassParser {
 		}
 
 		private Group createGroup(@Nullable Class<? extends Group> type) {
-			Class<? extends Group> effectiveType = (type != null ? type
-					: DefaultDeferredImportSelectorGroup.class);
-			Group group = ParserStrategyUtils.instantiateClass(effectiveType, Group.class,
+			Class<? extends Group> effectiveType = (type != null ? type : DefaultDeferredImportSelectorGroup.class);
+			Group group = BeanUtils.instantiateClass(effectiveType);
+			ParserStrategyUtils.invokeAwareMethods(group,
 					ConfigurationClassParser.this.environment,
 					ConfigurationClassParser.this.resourceLoader,
 					ConfigurationClassParser.this.registry);
 			return group;
 		}
-
 	}
 
 
@@ -910,7 +905,7 @@ class ConfigurationClassParser {
 		public SourceClass(Object source) {
 			this.source = source;
 			if (source instanceof Class) {
-				this.metadata = AnnotationMetadata.introspect((Class<?>) source);
+				this.metadata = new StandardAnnotationMetadata((Class<?>) source, true);
 			}
 			else {
 				this.metadata = ((MetadataReader) source).getAnnotationMetadata();
@@ -1014,7 +1009,7 @@ class ConfigurationClassParser {
 			Set<SourceClass> result = new LinkedHashSet<>();
 			if (this.source instanceof Class) {
 				Class<?> sourceClass = (Class<?>) this.source;
-				for (Annotation ann : sourceClass.getDeclaredAnnotations()) {
+				for (Annotation ann : sourceClass.getAnnotations()) {
 					Class<?> annType = ann.annotationType();
 					if (!annType.getName().startsWith("java")) {
 						try {
@@ -1074,7 +1069,7 @@ class ConfigurationClassParser {
 		}
 
 		@Override
-		public boolean equals(@Nullable Object other) {
+		public boolean equals(Object other) {
 			return (this == other || (other instanceof SourceClass &&
 					this.metadata.getClassName().equals(((SourceClass) other).metadata.getClassName())));
 		}

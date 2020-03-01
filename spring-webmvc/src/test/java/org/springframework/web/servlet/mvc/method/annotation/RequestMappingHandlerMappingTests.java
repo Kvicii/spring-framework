@@ -32,6 +32,7 @@ import org.junit.jupiter.api.Test;
 
 import org.springframework.core.annotation.AliasFor;
 import org.springframework.http.MediaType;
+import org.springframework.mock.web.test.MockHttpServletRequest;
 import org.springframework.stereotype.Controller;
 import org.springframework.util.ClassUtils;
 import org.springframework.web.accept.ContentNegotiationManager;
@@ -172,6 +173,24 @@ public class RequestMappingHandlerMappingTests {
 
 		request = new MockHttpServletRequest("GET", "/api/get.pdf");
 		assertThat(info.getPatternsCondition().getMatchingCondition(request)).isNull();
+	}
+
+	@Test // gh-23907
+	public void pathPrefixPreservesPathMatchingSettings() throws NoSuchMethodException {
+		this.handlerMapping.setUseSuffixPatternMatch(false);
+		this.handlerMapping.setPathPrefixes(Collections.singletonMap("/api", HandlerTypePredicate.forAnyHandlerType()));
+		this.handlerMapping.afterPropertiesSet();
+
+		Method method = ComposedAnnotationController.class.getMethod("get");
+		RequestMappingInfo info = this.handlerMapping.getMappingForMethod(method, ComposedAnnotationController.class);
+
+		assertNotNull(info);
+
+		MockHttpServletRequest request = new MockHttpServletRequest("GET", "/api/get");
+		assertNotNull(info.getPatternsCondition().getMatchingCondition(request));
+
+		request = new MockHttpServletRequest("GET", "/api/get.pdf");
+		assertNull(info.getPatternsCondition().getMatchingCondition(request));
 	}
 
 	@Test

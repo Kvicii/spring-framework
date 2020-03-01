@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-2020 the original author or authors.
+ * Copyright 2002-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -124,22 +124,6 @@ public interface CodecConfigurer {
 		void jackson2JsonEncoder(Encoder<?> encoder);
 
 		/**
-		 * Override the default Jackson Smile {@code Decoder}.
-		 * <p>Note that {@link #maxInMemorySize(int)}, if configured, will be
-		 * applied to the given decoder.
-		 * @param decoder the decoder instance to use
-		 * @see org.springframework.http.codec.json.Jackson2SmileDecoder
-		 */
-		void jackson2SmileDecoder(Decoder<?> decoder);
-
-		/**
-		 * Override the default Jackson Smile {@code Encoder}.
-		 * @param encoder the encoder instance to use
-		 * @see org.springframework.http.codec.json.Jackson2SmileEncoder
-		 */
-		void jackson2SmileEncoder(Encoder<?> encoder);
-
-		/**
 		 * Override the default Protobuf {@code Decoder}.
 		 * <p>Note that {@link #maxInMemorySize(int)}, if configured, will be
 		 * applied to the given decoder.
@@ -185,7 +169,8 @@ public interface CodecConfigurer {
 		 * It can also occur when splitting the input stream, e.g. delimited text,
 		 * in which case the limit applies to data buffered between delimiters.
 		 * <p>By default this is not set, in which case individual codec defaults
-		 * apply. All codecs are limited to 256K by default.
+		 * apply. In 5.1 most codecs are not limited except {@code FormHttpMessageReader}
+		 * which is limited to 256K. In 5.2 all codecs are limited to 256K by default.
 		 * @param byteCount the max number of bytes to buffer, or -1 for unlimited
 		 * @since 5.1.11
 		 */

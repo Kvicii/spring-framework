@@ -23,20 +23,18 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-import org.junit.jupiter.api.Test;
+import org.junit.Test;
 import reactor.core.publisher.Flux;
 import reactor.test.StepVerifier;
 
 import org.springframework.core.ResolvableType;
 import org.springframework.core.io.buffer.DataBuffer;
 import org.springframework.core.io.buffer.DataBufferLimitException;
-import org.springframework.core.testfixture.codec.AbstractDecoderTests;
 import org.springframework.util.MimeType;
 import org.springframework.util.MimeTypeUtils;
 
-import static java.nio.charset.StandardCharsets.UTF_16BE;
-import static java.nio.charset.StandardCharsets.UTF_8;
-import static org.assertj.core.api.Assertions.assertThat;
+import static java.nio.charset.StandardCharsets.*;
+import static org.junit.Assert.*;
 
 /**
  * Unit tests for {@link StringDecoder}.
@@ -45,12 +43,12 @@ import static org.assertj.core.api.Assertions.assertThat;
  * @author Brian Clozel
  * @author Mark Paluch
  */
-class StringDecoderTests extends AbstractDecoderTests<StringDecoder> {
+public class StringDecoderTests extends AbstractDecoderTestCase<StringDecoder> {
 
 	private static final ResolvableType TYPE = ResolvableType.forClass(String.class);
 
 
-	StringDecoderTests() {
+	public StringDecoderTests() {
 		super(StringDecoder.allMimeTypes());
 	}
 
@@ -58,12 +56,12 @@ class StringDecoderTests extends AbstractDecoderTests<StringDecoder> {
 	@Override
 	@Test
 	public void canDecode() {
-		assertThat(this.decoder.canDecode(TYPE, MimeTypeUtils.TEXT_PLAIN)).isTrue();
-		assertThat(this.decoder.canDecode(TYPE, MimeTypeUtils.TEXT_HTML)).isTrue();
-		assertThat(this.decoder.canDecode(TYPE, MimeTypeUtils.APPLICATION_JSON)).isTrue();
-		assertThat(this.decoder.canDecode(TYPE, MimeTypeUtils.parseMimeType("text/plain;charset=utf-8"))).isTrue();
-		assertThat(this.decoder.canDecode(ResolvableType.forClass(Integer.class), MimeTypeUtils.TEXT_PLAIN)).isFalse();
-		assertThat(this.decoder.canDecode(ResolvableType.forClass(Object.class), MimeTypeUtils.APPLICATION_JSON)).isFalse();
+		assertTrue(this.decoder.canDecode(TYPE, MimeTypeUtils.TEXT_PLAIN));
+		assertTrue(this.decoder.canDecode(TYPE, MimeTypeUtils.TEXT_HTML));
+		assertTrue(this.decoder.canDecode(TYPE, MimeTypeUtils.APPLICATION_JSON));
+		assertTrue(this.decoder.canDecode(TYPE, MimeTypeUtils.parseMimeType("text/plain;charset=utf-8")));
+		assertFalse(this.decoder.canDecode(ResolvableType.forClass(Integer.class), MimeTypeUtils.TEXT_PLAIN));
+		assertFalse(this.decoder.canDecode(ResolvableType.forClass(Object.class), MimeTypeUtils.APPLICATION_JSON));
 	}
 
 	@Override
@@ -79,7 +77,7 @@ class StringDecoderTests extends AbstractDecoderTests<StringDecoder> {
 	}
 
 	@Test
-	void decodeMultibyteCharacterUtf16() {
+	public void decodeMultibyteCharacterUtf16() {
 		String u = "ü";
 		String e = "é";
 		String o = "ø";
@@ -105,7 +103,7 @@ class StringDecoderTests extends AbstractDecoderTests<StringDecoder> {
 	}
 
 	@Test
-	void decodeNewLine() {
+	public void decodeNewLine() {
 		Flux<DataBuffer> input = Flux.just(
 				stringBuffer("\r\nabc\n"),
 				stringBuffer("def"),
@@ -130,17 +128,17 @@ class StringDecoderTests extends AbstractDecoderTests<StringDecoder> {
 	}
 
 	@Test
-	void maxInMemoryLimit() {
+	public void maxInMemoryLimit() {
 		Flux<DataBuffer> input = Flux.just(
 				stringBuffer("abc\n"), stringBuffer("defg\n"), stringBuffer("hijkl\n"));
 
-		this.decoder.setMaxInMemorySize(5);
+		this.decoder.setMaxInMemorySize(4);
 		testDecode(input, String.class, step ->
 				step.expectNext("abc", "defg").verifyError(DataBufferLimitException.class));
 	}
 
 	@Test // gh-24312
-	void maxInMemoryLimitReleaseUnprocessedLinesFromCurrentBuffer() {
+	public void maxInMemoryLimitReleaseUnprocessedLinesFromCurrentBuffer() {
 		Flux<DataBuffer> input = Flux.just(
 				stringBuffer("TOO MUCH DATA\nanother line\n\nand another\n"));
 
@@ -149,7 +147,7 @@ class StringDecoderTests extends AbstractDecoderTests<StringDecoder> {
 	}
 
 	@Test // gh-24339
-	void maxInMemoryLimitReleaseUnprocessedLinesWhenUnlimited() {
+	public void maxInMemoryLimitReleaseUnprocessedLinesWhenUnlimited() {
 		Flux<DataBuffer> input = Flux.just(stringBuffer("Line 1\nLine 2\nLine 3\n"));
 
 		this.decoder.setMaxInMemorySize(-1);
@@ -157,7 +155,7 @@ class StringDecoderTests extends AbstractDecoderTests<StringDecoder> {
 	}
 
 	@Test
-	void decodeNewLineIncludeDelimiters() {
+	public void decodeNewLineIncludeDelimiters() {
 		this.decoder = StringDecoder.allMimeTypes(StringDecoder.DEFAULT_DELIMITERS, false);
 
 		Flux<DataBuffer> input = Flux.just(
@@ -184,7 +182,7 @@ class StringDecoderTests extends AbstractDecoderTests<StringDecoder> {
 	}
 
 	@Test
-	void decodeEmptyFlux() {
+	public void decodeEmptyFlux() {
 		Flux<DataBuffer> input = Flux.empty();
 
 		testDecode(input, String.class, step -> step
@@ -193,7 +191,7 @@ class StringDecoderTests extends AbstractDecoderTests<StringDecoder> {
 	}
 
 	@Test
-	void decodeEmptyDataBuffer() {
+	public void decodeEmptyDataBuffer() {
 		Flux<DataBuffer> input = Flux.just(stringBuffer(""));
 		Flux<String> output = this.decoder.decode(input,
 				TYPE, null, Collections.emptyMap());
@@ -219,7 +217,7 @@ class StringDecoderTests extends AbstractDecoderTests<StringDecoder> {
 	}
 
 	@Test
-	void decodeToMonoWithEmptyFlux() {
+	public void decodeToMonoWithEmptyFlux() {
 		Flux<DataBuffer> input = Flux.empty();
 
 		testDecodeToMono(input, String.class, step -> step
@@ -233,5 +231,6 @@ class StringDecoderTests extends AbstractDecoderTests<StringDecoder> {
 		buffer.write(bytes);
 		return buffer;
 	}
+
 
 }
