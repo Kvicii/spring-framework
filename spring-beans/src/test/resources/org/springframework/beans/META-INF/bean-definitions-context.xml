@@ -18,6 +18,4 @@
 
 	<!--别名	-->
 	<alias name="user" alias="kyushu-user"/>
-
-
 </beans>

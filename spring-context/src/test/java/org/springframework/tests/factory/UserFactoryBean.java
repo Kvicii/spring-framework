@@ -8,31 +8,15 @@ import org.springframework.domain.User;
  * @date 2020/2/24 18:44
  * @description
  */
-public class UserFactoryBean implements FactoryBean<User> {
-
-	private String userInfo;
-
-	public void setUserInfo(String userInfo) {
-		this.userInfo = userInfo;
-	}
+public class UserFactoryBean implements FactoryBean {
 
 	@Override
-	public User getObject() throws Exception {
-
-		String[] strings = userInfo.split(",");
-		User user = new User();
-		user.setUserId(Long.valueOf(strings[0]));
-		user.setName(strings[1]);
-		return user;
+	public Object getObject() throws Exception {
+		return User.createUser();
 	}
 
 	@Override
 	public Class<?> getObjectType() {
-		return null;
-	}
-
-	@Override
-	public boolean isSingleton() {
-		return true;
+		return User.class;
 	}
 }

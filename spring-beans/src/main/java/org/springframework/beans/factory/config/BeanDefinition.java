@@ -30,7 +30,7 @@ import org.springframework.lang.Nullable;
  * <p>This is just a minimal interface: The main intention is to allow a
  * {@link BeanFactoryPostProcessor} to introspect and modify property values
  * and other bean metadata.
- * <p>
+
  * 之前版本的BeanDefinition无法进行set操作
  *
  * @author Juergen Hoeller
@@ -260,7 +260,6 @@ public interface BeanDefinition extends AttributeAccessor, BeanMetadataElement {
 
 	/**
 	 * Set the name of the initializer method.
-	 * 从5.1提炼到BeanDefinition
 	 *
 	 * @since 5.1
 	 */

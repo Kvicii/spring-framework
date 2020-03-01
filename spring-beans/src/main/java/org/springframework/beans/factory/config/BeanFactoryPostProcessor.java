@@ -52,16 +52,12 @@ import org.springframework.beans.BeansException;
  * programmatically registered post-processors. Furthermore, the
  * {@link org.springframework.core.annotation.Order @Order} annotation is not
  * taken into account for {@code BeanFactoryPostProcessor} beans.
- * <p>
- * BeanFactory创建之后 封装BeanDefinition之后实例化Bean之前该接口方法生效
- * 能拿到所有的BeanDefinition对整个BeanFactory进行处理
- * 典型的应用是{@link PropertyPlaceholderConfigurer} 读取xml配置${}解析
  *
  * @author Juergen Hoeller
  * @author Sam Brannen
+ * @since 06.07.2003
  * @see BeanPostProcessor
  * @see PropertyResourceConfigurer
- * @since 06.07.2003
  */
 @FunctionalInterface
 public interface BeanFactoryPostProcessor {
@@ -71,7 +67,6 @@ public interface BeanFactoryPostProcessor {
 	 * initialization. All bean definitions will have been loaded, but no beans
 	 * will have been instantiated yet. This allows for overriding or adding
 	 * properties even to eager-initializing beans.
-	 *
 	 * @param beanFactory the bean factory used by the application context
 	 * @throws org.springframework.beans.BeansException in case of errors
 	 */
