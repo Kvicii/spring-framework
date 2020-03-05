@@ -338,9 +338,13 @@ public abstract class TransactionAspectSupport implements BeanFactoryAware, Init
 	protected Object invokeWithinTransaction(Method method, @Nullable Class<?> targetClass,
 											 final InvocationCallback invocation) throws Throwable {
 
-		// If the transaction attribute is null, the method is non-transactional.
+		/**
+		 * If the transaction attribute is null, the method is non-transactional.
+		 * 获取属性解析器 在{@link org.springframework.transaction.annotation.ProxyTransactionManagementConfiguration}进行注入的
+		 */
 		TransactionAttributeSource tas = getTransactionAttributeSource();
 		final TransactionAttribute txAttr = (tas != null ? tas.getTransactionAttribute(method, targetClass) : null);
+		// 获取事务管理器
 		final TransactionManager tm = determineTransactionManager(txAttr);
 
 		if (this.reactiveAdapterRegistry != null && tm instanceof ReactiveTransactionManager) {
@@ -365,7 +369,10 @@ public abstract class TransactionAspectSupport implements BeanFactoryAware, Init
 		final String joinpointIdentification = methodIdentification(method, targetClass, txAttr);
 
 		if (txAttr == null || !(ptm instanceof CallbackPreferringPlatformTransactionManager)) {
-			// Standard transaction demarcation with getTransaction and commit/rollback calls.
+			/**
+			 * Standard transaction demarcation with getTransaction and commit/rollback calls.
+			 * 创建并开启事务
+			 */
 			TransactionInfo txInfo = createTransactionIfNecessary(ptm, txAttr, joinpointIdentification);
 
 			Object retVal;
@@ -374,7 +381,10 @@ public abstract class TransactionAspectSupport implements BeanFactoryAware, Init
 				// This will normally result in a target object being invoked.
 				retVal = invocation.proceedWithInvocation();
 			} catch (Throwable ex) {
-				// target invocation exception
+				/**
+				 * target invocation exception
+				 * 进行事务回滚
+				 */
 				completeTransactionAfterThrowing(txInfo, ex);
 				throw ex;
 			} finally {
@@ -388,7 +398,7 @@ public abstract class TransactionAspectSupport implements BeanFactoryAware, Init
 					retVal = VavrDelegate.evaluateTryFailure(retVal, txAttr, status);
 				}
 			}
-
+			// 流程正常结束提交事务
 			commitTransactionAfterReturning(txInfo);
 			return retVal;
 		} else {

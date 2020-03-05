@@ -496,11 +496,11 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 		}
 		RootBeanDefinition mbdToUse = mbd;
 
-		// Make sure bean class is actually resolved at this point, and
-		// clone the bean definition in case of a dynamically resolved Class
-		// which cannot be stored in the shared merged bean definition.
 		/**
-		 * 判断Bean是否可以实例化、是否可以通过类加载器载入
+		 * Make sure bean class is actually resolved at this point, and
+		 * clone the bean definition in case of a dynamically resolved Class
+		 * which cannot be stored in the shared merged bean definition.
+		 * 判断Bean是否可以实例化 是否可以通过类加载器载入
 		 */
 		Class<?> resolvedClass = resolveBeanClass(mbd, beanName);
 		if (resolvedClass != null && !mbd.hasBeanClass() && mbd.getBeanClassName() != null) {
@@ -600,8 +600,12 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 			}
 		}
 
-		// Eagerly cache singletons to be able to resolve circular references
-		// even when triggered by lifecycle interfaces like BeanFactoryAware.
+		/**
+		 * Eagerly cache singletons to be able to resolve circular references
+		 * even when triggered by lifecycle interfaces like BeanFactoryAware.
+		 * 处理循环依赖
+		 */
+
 		boolean earlySingletonExposure = (mbd.isSingleton() && this.allowCircularReferences &&
 				isSingletonCurrentlyInCreation(beanName));
 		if (earlySingletonExposure) {
@@ -609,19 +613,20 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 				logger.trace("Eagerly caching bean '" + beanName +
 						"' to allow for resolving potential circular references");
 			}
+			// 将实例化的Bean放入三级缓存
 			addSingletonFactory(beanName, () -> getEarlyBeanReference(beanName, mbd, bean));
 		}
 
-		// Initialize the bean instance.
 		/**
-		 * 对Bean初始化
+		 *  Initialize the bean instance.
+		 * 对Bean初始化 Bean属性的填充
 		 * 依赖注入常常在此发生 这个exposedObject在初始化之后会作为依赖注入完成后的Bean返回
 		 */
 		Object exposedObject = bean;
 		try {
 			populateBean(beanName, mbd, instanceWrapper);
 			/**
-			 * 在完成对Bean的生成和依赖注入后 开始对Bean进行初始化 初始化过程包含了对后置处理器postProcessBeforeInitialization()的调用
+			 * 在完成对Bean的生成和依赖注入后 开始对Bean进行初始化 初始化过程包含了对后置处理器postProcessBeforeInitialization的调用
 			 */
 			exposedObject = initializeBean(beanName, exposedObject, mbd);
 		} catch (Throwable ex) {
@@ -1491,7 +1496,7 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 		}
 
 		/**
-		 * 进行属性注入
+		 * 进行属性注入 处理属性依赖
 		 */
 		if (pvs != null) {
 			applyPropertyValues(beanName, mbd, bw, pvs);
@@ -1762,6 +1767,7 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 					}
 					originalValue = new DependencyDescriptor(new MethodParameter(writeMethod, 0), true);
 				}
+				// fix循环依赖问题
 				Object resolvedValue = valueResolver.resolveValueIfNecessary(pv, originalValue);
 				Object convertedValue = resolvedValue;
 				boolean convertible = bw.isWritableProperty(propertyName) &&
@@ -1869,11 +1875,11 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 		}
 		/**
 		 * 这里是对后置处理器BeanPostProcessors的postProcessorsAfterInitialization的回调方法的调用
+		 * AOP代理对象的生成是通过后置处理器完成的
 		 */
 		if (mbd == null || !mbd.isSynthetic()) {
 			wrappedBean = applyBeanPostProcessorsAfterInitialization(wrappedBean, beanName);
 		}
-
 		return wrappedBean;
 	}
 

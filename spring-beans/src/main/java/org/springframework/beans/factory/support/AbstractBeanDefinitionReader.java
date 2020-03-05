@@ -231,9 +231,10 @@ public abstract class AbstractBeanDefinitionReader implements BeanDefinitionRead
 			// Resource pattern matching available.
 			try {
 				/**
-				 * 调用org.springframework.core.io.support.ResourcePatternResolver#getResources(java.lang.String)完成具体的Resource定位
+				 * 调用ResourcePatternResolver#getResources完成具体的Resource定位	解析XML
 				 */
 				Resource[] resources = ((ResourcePatternResolver) resourceLoader).getResources(location);
+				// 加载xml配置的BeanDefinition对象 返回总数量
 				int count = loadBeanDefinitions(resources);
 				if (actualResources != null) {
 					Collections.addAll(actualResources, resources);
@@ -249,7 +250,7 @@ public abstract class AbstractBeanDefinitionReader implements BeanDefinitionRead
 		} else {
 			// Can only load single resources by absolute URL.
 			/**
-			 * 调用org.springframework.core.io.DefaultResourceLoader#getResource(java.lang.String)完成具体的Resource定位
+			 * 调用DefaultResourceLoader#getResource完成具体的Resource定位		解析URL
 			 */
 			Resource resource = resourceLoader.getResource(location);
 			int count = loadBeanDefinitions(resource);

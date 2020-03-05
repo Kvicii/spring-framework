@@ -19,6 +19,7 @@ package org.springframework.tests;
 import java.util.Set;
 
 import org.apache.commons.logging.Log;
+import org.springframework.core.testfixture.TestGroup;
 
 import static org.junit.jupiter.api.Assumptions.assumeFalse;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;

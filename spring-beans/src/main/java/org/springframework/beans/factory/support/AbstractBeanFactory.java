@@ -282,6 +282,7 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 	protected <T> T doGetBean(final String name, @Nullable final Class<T> requiredType,
 							  @Nullable final Object[] args, boolean typeCheckOnly) throws BeansException {
 
+		// 解析beanName beanName是以&开头去掉& 是别名取到真正的名字
 		final String beanName = transformedBeanName(name);
 		Object bean;
 
@@ -304,8 +305,11 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 			 */
 			bean = getObjectForBeanInstance(sharedInstance, name, beanName, null);
 		} else {
-			// Fail if we're already creating this bean instance:
-			// We're assumably within a circular reference.
+			/**
+			 *  Fail if we're already creating this bean instance:
+			 *  We're assumably within a circular reference.
+			 *  Bean是prototype类型并且开启了循坏依赖 抛出异常
+			 */
 			if (isPrototypeCurrentlyInCreation(beanName)) {
 				throw new BeanCurrentlyInCreationException(beanName);
 			}
@@ -343,12 +347,13 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 			}
 
 			try {
+				// 合并父子Bean属性
 				final RootBeanDefinition mbd = getMergedLocalBeanDefinition(beanName);
 				checkMergedBeanDefinition(mbd, beanName, args);
 
-				// Guarantee initialization of beans that the current bean depends on.
 				/**
-				 * 获取当前Bean所有依赖的Bean 触发getBean()递归调用 直到取到一个没有任何依赖的Bean为止
+				 * Guarantee initialization of beans that the current bean depends on.
+				 * 获取当前Bean所有依赖的Bean 触发getBean递归调用 直到取到一个没有任何依赖的Bean为止
 				 */
 				String[] dependsOn = mbd.getDependsOn();
 				if (dependsOn != null) {
@@ -367,8 +372,8 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 					}
 				}
 
-				// Create bean instance.
 				/**
+				 * Create bean instance.
 				 * 创建Bean实例
 				 */
 				if (mbd.isSingleton()) {
