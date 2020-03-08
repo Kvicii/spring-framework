@@ -47,14 +47,16 @@ import org.springframework.lang.Nullable;
  * synchronization of bean creation. There is usually no need for internal
  * synchronization other than for purposes of lazy initialization within the
  * FactoryBean itself (or the like).
+ * <p>
+ * 自定义Bean的创建过程以完成复杂Bean的定义
  *
+ * @param <T> the bean type
  * @author Rod Johnson
  * @author Juergen Hoeller
- * @since 08.03.2003
- * @param <T> the bean type
  * @see org.springframework.beans.factory.BeanFactory
  * @see org.springframework.aop.framework.ProxyFactoryBean
  * @see org.springframework.jndi.JndiObjectFactoryBean
+ * @since 08.03.2003
  */
 public interface FactoryBean<T> {
 
@@ -64,6 +66,7 @@ public interface FactoryBean<T> {
 	 * {@link org.springframework.beans.factory.config.BeanDefinition} so that
 	 * factory beans can signal their object type when it can't be deduced from
 	 * the factory bean class.
+	 *
 	 * @since 5.2
 	 */
 	String OBJECT_TYPE_ATTRIBUTE = "factoryBeanObjectType";
@@ -82,6 +85,10 @@ public interface FactoryBean<T> {
 	 * will not throw a FactoryBeanNotInitializedException in this case anymore.
 	 * FactoryBean implementations are encouraged to throw
 	 * FactoryBeanNotInitializedException themselves now, as appropriate.
+	 * <p>
+	 * 返回FactoryBean创建的对象
+	 * isSingleton()返回true 将实例放到spring的单例缓存池
+	 *
 	 * @return an instance of the bean (can be {@code null})
 	 * @throws Exception in case of creation errors
 	 * @see FactoryBeanNotInitializedException
@@ -104,6 +111,8 @@ public interface FactoryBean<T> {
 	 * <p><b>NOTE:</b> Autowiring will simply ignore FactoryBeans that return
 	 * {@code null} here. Therefore it is highly recommended to implement
 	 * this method properly, using the current state of the FactoryBean.
+	 * 返回创建Bean的类型
+	 *
 	 * @return the type of object that this FactoryBean creates,
 	 * or {@code null} if not known at the time of the call
 	 * @see ListableBeanFactory#getBeansOfType
@@ -132,6 +141,7 @@ public interface FactoryBean<T> {
 	 * {@code isSingleton()} implementation returns {@code false}.
 	 * <p>The default implementation returns {@code true}, since a
 	 * {@code FactoryBean} typically manages a singleton instance.
+	 *
 	 * @return whether the exposed object is a singleton
 	 * @see #getObject()
 	 * @see SmartFactoryBean#isPrototype()
@@ -139,5 +149,4 @@ public interface FactoryBean<T> {
 	default boolean isSingleton() {
 		return true;
 	}
-
 }

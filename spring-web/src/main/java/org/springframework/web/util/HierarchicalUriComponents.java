@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-2019 the original author or authors.
+ * Copyright 2002-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -337,9 +337,6 @@ final class HierarchicalUriComponents extends UriComponents {
 		byte[] bytes = source.getBytes(charset);
 		boolean original = true;
 		for (byte b : bytes) {
-			if (b < 0) {
-				b += 256;
-			}
 			if (!type.isAllowed(b)) {
 				original = false;
 				break;
@@ -351,9 +348,6 @@ final class HierarchicalUriComponents extends UriComponents {
 
 		ByteArrayOutputStream bos = new ByteArrayOutputStream(bytes.length);
 		for (byte b : bytes) {
-			if (b < 0) {
-				b += 256;
-			}
 			if (type.isAllowed(b)) {
 				bos.write(b);
 			}
@@ -588,7 +582,7 @@ final class HierarchicalUriComponents extends UriComponents {
 	/**
 	 * Enumeration used to identify the allowed characters per URI component.
 	 * <p>Contains methods to indicate whether a given character is valid in a specific URI component.
-	 * @see <a href="https://www.ietf.org/rfc/rfc3986.txt">RFC 3986</a>
+	 * @see <a href="https://tools.ietf.org/html/rfc3986">RFC 3986</a>
 	 */
 	enum Type {
 

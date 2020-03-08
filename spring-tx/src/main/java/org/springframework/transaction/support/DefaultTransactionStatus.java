@@ -37,9 +37,10 @@ import org.springframework.util.Assert;
  * implementations, in particular not for mock transaction managers in testing environments.
  * Use the alternative {@link SimpleTransactionStatus} class or a mock for the plain
  * {@link org.springframework.transaction.TransactionStatus} interface instead.
+ * <p>
+ * spring会根据每层事务的TransactionStatus内部是否持有transaction和newTransaction标志位判断是否属于外层事务
  *
  * @author Juergen Hoeller
- * @since 19.01.2004
  * @see AbstractPlatformTransactionManager
  * @see org.springframework.transaction.SavepointManager
  * @see #getTransaction
@@ -47,12 +48,19 @@ import org.springframework.util.Assert;
  * @see #rollbackToSavepoint
  * @see #releaseSavepoint
  * @see SimpleTransactionStatus
+ * @since 19.01.2004
  */
 public class DefaultTransactionStatus extends AbstractTransactionStatus {
 
+	/**
+	 * 表示物理事务对象 由事务管理器的子类给出
+	 */
 	@Nullable
 	private final Object transaction;
 
+	/**
+	 * 标记是否是新建事务(根据事务传播行为得出 如加入已有事务该值为false)
+	 */
 	private final boolean newTransaction;
 
 	private final boolean newSynchronization;
@@ -67,18 +75,19 @@ public class DefaultTransactionStatus extends AbstractTransactionStatus {
 
 	/**
 	 * Create a new {@code DefaultTransactionStatus} instance.
-	 * @param transaction underlying transaction object that can hold state
-	 * for the internal transaction implementation
-	 * @param newTransaction if the transaction is new, otherwise participating
-	 * in an existing transaction
+	 *
+	 * @param transaction        underlying transaction object that can hold state
+	 *                           for the internal transaction implementation
+	 * @param newTransaction     if the transaction is new, otherwise participating
+	 *                           in an existing transaction
 	 * @param newSynchronization if a new transaction synchronization has been
-	 * opened for the given transaction
-	 * @param readOnly whether the transaction is marked as read-only
-	 * @param debug should debug logging be enabled for the handling of this transaction?
-	 * Caching it in here can prevent repeated calls to ask the logging system whether
-	 * debug logging should be enabled.
+	 *                           opened for the given transaction
+	 * @param readOnly           whether the transaction is marked as read-only
+	 * @param debug              should debug logging be enabled for the handling of this transaction?
+	 *                           Caching it in here can prevent repeated calls to ask the logging system whether
+	 *                           debug logging should be enabled.
 	 * @param suspendedResources a holder for resources that have been suspended
-	 * for this transaction, if any
+	 *                           for this transaction, if any
 	 */
 	public DefaultTransactionStatus(
 			@Nullable Object transaction, boolean newTransaction, boolean newSynchronization,
@@ -95,6 +104,7 @@ public class DefaultTransactionStatus extends AbstractTransactionStatus {
 
 	/**
 	 * Return the underlying transaction object.
+	 *
 	 * @throws IllegalStateException if no transaction is active
 	 */
 	public Object getTransaction() {
@@ -157,6 +167,7 @@ public class DefaultTransactionStatus extends AbstractTransactionStatus {
 	 * that the latter implements the {@link SmartTransactionObject} interface.
 	 * <p>Will return {@code true} if the global transaction itself has been marked
 	 * rollback-only by the transaction coordinator, for example in case of a timeout.
+	 *
 	 * @see SmartTransactionObject#isRollbackOnly()
 	 */
 	@Override
@@ -168,6 +179,7 @@ public class DefaultTransactionStatus extends AbstractTransactionStatus {
 	/**
 	 * This implementation exposes the {@link SavepointManager} interface
 	 * of the underlying transaction object, if any.
+	 *
 	 * @throws NestedTransactionNotSupportedException if savepoints are not supported
 	 * @see #isTransactionSavepointManager()
 	 */
@@ -184,6 +196,7 @@ public class DefaultTransactionStatus extends AbstractTransactionStatus {
 	/**
 	 * Return whether the underlying transaction implements the {@link SavepointManager}
 	 * interface and therefore supports savepoints.
+	 *
 	 * @see #getTransaction()
 	 * @see #getSavepointManager()
 	 */
@@ -194,6 +207,7 @@ public class DefaultTransactionStatus extends AbstractTransactionStatus {
 	/**
 	 * Delegate the flushing to the transaction object, provided that the latter
 	 * implements the {@link SmartTransactionObject} interface.
+	 *
 	 * @see SmartTransactionObject#flush()
 	 */
 	@Override

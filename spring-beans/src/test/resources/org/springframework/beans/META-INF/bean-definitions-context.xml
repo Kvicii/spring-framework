@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	   xsi:schemaLocation="http://www.springframework.org/schema/beans https://www.springframework.org/schema/beans/spring-beans-2.0.xsd">
+
+	<bean id="user" class="org.springframework.beans.domain.User">
+		<property name="userId" value="26"/>
+		<property name="name" value="Kyushu"/>
+	</bean>
+
+	<bean id="objectFactory" class="org.springframework.beans.factory.config.ObjectFactoryCreatingFactoryBean">
+		<property name="targetBeanName" value="user"/>
+	</bean>
+
+	<bean id="superUser" class="org.springframework.beans.domain.SuperUser" parent="user" primary="true">
+		<property name="level" value="member"/>
+	</bean>
+
+	<!--别名	-->
+	<alias name="user" alias="kyushu-user"/>
+
+
+</beans>

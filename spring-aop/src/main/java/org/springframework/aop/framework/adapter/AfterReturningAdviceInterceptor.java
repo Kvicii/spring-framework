@@ -39,9 +39,10 @@ public class AfterReturningAdviceInterceptor implements MethodInterceptor, After
 
 	private final AfterReturningAdvice advice;
 
-
 	/**
 	 * Create a new AfterReturningAdviceInterceptor for the given advice.
+	 * 为指定的Advice创建拦截器对象
+	 *
 	 * @param advice the AfterReturningAdvice to wrap
 	 */
 	public AfterReturningAdviceInterceptor(AfterReturningAdvice advice) {
@@ -49,7 +50,13 @@ public class AfterReturningAdviceInterceptor implements MethodInterceptor, After
 		this.advice = advice;
 	}
 
-
+	/**
+	 * 先完成目标方法调用 再执行afterReturning回调
+	 *
+	 * @param mi
+	 * @return
+	 * @throws Throwable
+	 */
 	@Override
 	public Object invoke(MethodInvocation mi) throws Throwable {
 		Object retVal = mi.proceed();

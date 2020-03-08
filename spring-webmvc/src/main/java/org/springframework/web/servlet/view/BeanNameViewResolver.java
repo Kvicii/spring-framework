@@ -16,8 +16,6 @@
 
 package org.springframework.web.servlet.view;
 
-import java.util.Locale;
-
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.core.Ordered;
@@ -25,6 +23,8 @@ import org.springframework.lang.Nullable;
 import org.springframework.web.context.support.WebApplicationObjectSupport;
 import org.springframework.web.servlet.View;
 import org.springframework.web.servlet.ViewResolver;
+
+import java.util.Locale;
 
 /**
  * A simple implementation of {@link org.springframework.web.servlet.ViewResolver}
@@ -47,19 +47,19 @@ import org.springframework.web.servlet.ViewResolver;
  * a {@link UrlBasedViewResolver}.
  *
  * @author Juergen Hoeller
- * @since 18.06.2003
  * @see XmlViewResolver
  * @see ResourceBundleViewResolver
  * @see UrlBasedViewResolver
+ * @since 18.06.2003
  */
 public class BeanNameViewResolver extends WebApplicationObjectSupport implements ViewResolver, Ordered {
 
 	private int order = Ordered.LOWEST_PRECEDENCE;  // default: same as non-Ordered
 
-
 	/**
 	 * Specify the order value for this ViewResolver bean.
 	 * <p>The default value is {@code Ordered.LOWEST_PRECEDENCE}, meaning non-ordered.
+	 *
 	 * @see org.springframework.core.Ordered#getOrder()
 	 */
 	public void setOrder(int order) {
@@ -71,10 +71,13 @@ public class BeanNameViewResolver extends WebApplicationObjectSupport implements
 		return this.order;
 	}
 
-
 	@Override
 	@Nullable
 	public View resolveViewName(String viewName, Locale locale) throws BeansException {
+		/**
+		 * 直接获取IoC容器 判断当前IoC容器是否存在viewName的Bean
+		 * 存在通过依赖注入getBean获取
+		 */
 		ApplicationContext context = obtainApplicationContext();
 		if (!context.containsBean(viewName)) {
 			// Allow for ViewResolver chaining...

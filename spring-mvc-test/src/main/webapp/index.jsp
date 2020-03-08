@@ -1,16 +1,14 @@
 <%--
   Created by IntelliJ IDEA.
-  User: kyushu
-  Date: 2020/3/8
-  Time: 22:54
+  User: yingdian
   To change this template use File | Settings | File Templates.
 --%>
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <html>
-  <head>
-    <title>$Title$</title>
-  </head>
-  <body>
-  $END$
-  </body>
+<head>
+    <title>hi,boy</title>
+</head>
+<body>
+<a href="/demo/handle01?name=zhangsan">点我测试</a>
+</body>
 </html>

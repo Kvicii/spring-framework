@@ -41,6 +41,9 @@ import java.util.Set;
  * {@link javax.ejb.TransactionAttribute} annotation (if present).
  * This class may also serve as base class for a custom TransactionAttributeSource,
  * or get customized through {@link TransactionAnnotationParser} strategies.
+ * <p>
+ * 封装了目标方法是否被拦截的逻辑 虽然没有实现Pointcut 但目标方法判断的时候实际上是委托给了AnnotationTransactionAttributeSource.getTransactionAttributeSource
+ * 通过适配器模式Pointcut信息
  *
  * @author Colin Sampaleanu
  * @author Juergen Hoeller
@@ -68,6 +71,7 @@ public class AnnotationTransactionAttributeSource extends AbstractFallbackTransa
 
 	private final boolean publicMethodsOnly;
 
+	// 事务的注解解析器集合
 	private final Set<TransactionAnnotationParser> annotationParsers;
 
 

@@ -5,6 +5,8 @@ plugins {
 
 group 'spring.spring-mvc-test'
 
+sourceCompatibility = 11
+
 repositories {
     mavenCentral()
 }

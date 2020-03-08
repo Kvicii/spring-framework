@@ -16,6 +16,13 @@
 
 package org.springframework.transaction.interceptor;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.springframework.lang.Nullable;
+import org.springframework.util.ClassUtils;
+import org.springframework.util.ObjectUtils;
+import org.springframework.util.PatternMatchUtils;
+
 import java.io.Serializable;
 import java.lang.reflect.Method;
 import java.util.Enumeration;
@@ -23,22 +30,14 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-
-import org.springframework.lang.Nullable;
-import org.springframework.util.ClassUtils;
-import org.springframework.util.ObjectUtils;
-import org.springframework.util.PatternMatchUtils;
-
 /**
  * Simple {@link TransactionAttributeSource} implementation that
  * allows attributes to be matched by registered name.
  *
  * @author Juergen Hoeller
- * @since 21.08.2003
  * @see #isMatch
  * @see MethodMapTransactionAttributeSource
+ * @since 21.08.2003
  */
 @SuppressWarnings("serial")
 public class NameMatchTransactionAttributeSource implements TransactionAttributeSource, Serializable {
@@ -49,7 +48,9 @@ public class NameMatchTransactionAttributeSource implements TransactionAttribute
 	 */
 	protected static final Log logger = LogFactory.getLog(NameMatchTransactionAttributeSource.class);
 
-	/** Keys are method names; values are TransactionAttributes. */
+	/**
+	 * Keys are method names; values are TransactionAttributes.
+	 */
 	private Map<String, TransactionAttribute> nameMap = new HashMap<>();
 
 
@@ -57,6 +58,7 @@ public class NameMatchTransactionAttributeSource implements TransactionAttribute
 	 * Set a name/attribute map, consisting of method names
 	 * (e.g. "myMethod") and TransactionAttribute instances
 	 * (or Strings to be converted to TransactionAttribute instances).
+	 *
 	 * @see TransactionAttribute
 	 * @see TransactionAttributeEditor
 	 */
@@ -68,6 +70,9 @@ public class NameMatchTransactionAttributeSource implements TransactionAttribute
 	 * Parses the given properties into a name/attribute map.
 	 * Expects method names as keys and String attributes definitions as values,
 	 * parsable into TransactionAttribute instances via TransactionAttributeEditor.
+	 * <p>
+	 * 该方法完成对事物处理属性的配置和读入
+	 *
 	 * @see #setNameMap
 	 * @see TransactionAttributeEditor
 	 */
@@ -87,8 +92,9 @@ public class NameMatchTransactionAttributeSource implements TransactionAttribute
 	 * Add an attribute for a transactional method.
 	 * <p>Method names can be exact matches, or of the pattern "xxx*",
 	 * "*xxx" or "*xxx*" for matching multiple methods.
+	 *
 	 * @param methodName the name of the method
-	 * @param attr attribute associated with the method
+	 * @param attr       attribute associated with the method
 	 */
 	public void addTransactionalMethod(String methodName, TransactionAttribute attr) {
 		if (logger.isDebugEnabled()) {
@@ -97,7 +103,14 @@ public class NameMatchTransactionAttributeSource implements TransactionAttribute
 		this.nameMap.put(methodName, attr);
 	}
 
-
+	/**
+	 * 对调用的方法进行判断 判断它是否是事务方法
+	 *
+	 * @param method      the method to introspect
+	 * @param targetClass the target class (may be {@code null},
+	 *                    in which case the declaring class of the method must be used)
+	 * @return
+	 */
 	@Override
 	@Nullable
 	public TransactionAttribute getTransactionAttribute(Method method, @Nullable Class<?> targetClass) {
@@ -105,10 +118,15 @@ public class NameMatchTransactionAttributeSource implements TransactionAttribute
 			return null;
 		}
 
-		// Look for direct name match.
+		/**
+		 * Look for direct name match.
+		 * 判断当前目标调用的方法与配置的事务方法是否直接匹配
+		 */
 		String methodName = method.getName();
 		TransactionAttribute attr = this.nameMap.get(methodName);
-
+		/**
+		 * 不能直接匹配 通过PatternMatchUtils的simpleMatch方法进行匹配
+		 */
 		if (attr == null) {
 			// Look for most specific name match.
 			String bestNameMatch = null;
@@ -120,7 +138,6 @@ public class NameMatchTransactionAttributeSource implements TransactionAttribute
 				}
 			}
 		}
-
 		return attr;
 	}
 
@@ -128,6 +145,9 @@ public class NameMatchTransactionAttributeSource implements TransactionAttribute
 	 * Return if the given method name matches the mapped name.
 	 * <p>The default implementation checks for "xxx*", "*xxx" and "*xxx*" matches,
 	 * as well as direct equality. Can be overridden in subclasses.
+	 * <p>
+	 * 事务方法的匹配判断
+	 *
 	 * @param methodName the method name of the class
 	 * @param mappedName the name in the descriptor
 	 * @return if the names match

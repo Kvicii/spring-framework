@@ -42,6 +42,8 @@ import java.util.Properties;
  *
  * <p>TransactionInterceptors are thread-safe.
  *
+ * <p>实现Advice功能 定义了拦截行为
+ *
  * @author Rod Johnson
  * @author Juergen Hoeller
  * @see TransactionProxyFactoryBean
@@ -95,9 +97,15 @@ public class TransactionInterceptor extends TransactionAspectSupport implements 
 		// Work out the target class: may be {@code null}.
 		// The TransactionAttributeSource should be passed the target class
 		// as well as the method, which may be from an interface.
+		/**
+		 * invocation.getThis可能是一个代理类 所以需要获取目标原生的Class对象
+		 */
 		Class<?> targetClass = (invocation.getThis() != null ? AopUtils.getTargetClass(invocation.getThis()) : null);
 
 		// Adapt to TransactionAspectSupport's invokeWithinTransaction...
+		/**
+		 * 调用父类的方法 invocation::proceed是一个回调 可以继续向下执行调用链
+		 */
 		return invokeWithinTransaction(invocation.getMethod(), targetClass, invocation::proceed);
 	}
 

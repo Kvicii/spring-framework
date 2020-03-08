@@ -16,26 +16,25 @@
 
 package org.springframework.aop.framework.adapter;
 
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.util.HashMap;
-import java.util.Map;
-
 import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-
 import org.springframework.aop.AfterAdvice;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
+
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Interceptor to wrap an after-throwing advice.
  *
  * <p>The signatures on handler methods on the {@code ThrowsAdvice}
  * implementation method argument must be of the form:<br>
- *
+ * <p>
  * {@code void afterThrowing([Method, args, target], ThrowableSubclass);}
  *
  * <p>Only the last argument is required.
@@ -63,26 +62,35 @@ public class ThrowsAdviceInterceptor implements MethodInterceptor, AfterAdvice {
 
 	private final Object throwsAdvice;
 
-	/** Methods on throws advice, keyed by exception class. */
+	/**
+	 * Methods on throws advice, keyed by exception class.
+	 */
 	private final Map<Class<?>, Method> exceptionHandlerMap = new HashMap<>();
 
 
 	/**
 	 * Create a new ThrowsAdviceInterceptor for the given ThrowsAdvice.
+	 *
 	 * @param throwsAdvice the advice object that defines the exception handler methods
-	 * (usually a {@link org.springframework.aop.ThrowsAdvice} implementation)
+	 *                     (usually a {@link org.springframework.aop.ThrowsAdvice} implementation)
 	 */
 	public ThrowsAdviceInterceptor(Object throwsAdvice) {
 		Assert.notNull(throwsAdvice, "Advice must not be null");
 		this.throwsAdvice = throwsAdvice;
 
+		/**
+		 * 配置ThrowsAdvice的回调方法
+		 */
 		Method[] methods = throwsAdvice.getClass().getMethods();
 		for (Method method : methods) {
 			if (method.getName().equals(AFTER_THROWING) &&
 					(method.getParameterCount() == 1 || method.getParameterCount() == 4)) {
 				Class<?> throwableParam = method.getParameterTypes()[method.getParameterCount() - 1];
 				if (Throwable.class.isAssignableFrom(throwableParam)) {
-					// An exception handler to register...
+					/**
+					 * An exception handler to register...
+					 * 配置异常处理
+					 */
 					this.exceptionHandlerMap.put(throwableParam, method);
 					if (logger.isDebugEnabled()) {
 						logger.debug("Found exception handler method on throws advice: " + method);
@@ -108,10 +116,13 @@ public class ThrowsAdviceInterceptor implements MethodInterceptor, AfterAdvice {
 
 	@Override
 	public Object invoke(MethodInvocation mi) throws Throwable {
+		/**
+		 * 把对目标方法的调用放在try/catch中 并在catch中触发ThrowsAdvice的回调
+		 * 之后把异常继续向外抛出 不做过多的处理
+		 */
 		try {
 			return mi.proceed();
-		}
-		catch (Throwable ex) {
+		} catch (Throwable ex) {
 			Method handlerMethod = getExceptionHandler(ex);
 			if (handlerMethod != null) {
 				invokeHandlerMethod(mi, ex, handlerMethod);
@@ -122,6 +133,7 @@ public class ThrowsAdviceInterceptor implements MethodInterceptor, AfterAdvice {
 
 	/**
 	 * Determine the exception handle method for the given exception.
+	 *
 	 * @param exception the exception thrown
 	 * @return a handler for the given exception type, or {@code null} if none found
 	 */
@@ -142,18 +154,24 @@ public class ThrowsAdviceInterceptor implements MethodInterceptor, AfterAdvice {
 		return handler;
 	}
 
+	/**
+	 * 通过反射启动对ThrowsAdvice回调方法的调用
+	 *
+	 * @param mi
+	 * @param ex
+	 * @param method
+	 * @throws Throwable
+	 */
 	private void invokeHandlerMethod(MethodInvocation mi, Throwable ex, Method method) throws Throwable {
 		Object[] handlerArgs;
 		if (method.getParameterCount() == 1) {
-			handlerArgs = new Object[] {ex};
-		}
-		else {
-			handlerArgs = new Object[] {mi.getMethod(), mi.getArguments(), mi.getThis(), ex};
+			handlerArgs = new Object[]{ex};
+		} else {
+			handlerArgs = new Object[]{mi.getMethod(), mi.getArguments(), mi.getThis(), ex};
 		}
 		try {
 			method.invoke(this.throwsAdvice, handlerArgs);
-		}
-		catch (InvocationTargetException targetEx) {
+		} catch (InvocationTargetException targetEx) {
 			throw targetEx.getTargetException();
 		}
 	}

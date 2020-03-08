@@ -30,6 +30,8 @@ import org.springframework.util.Assert;
  * <p>Because the AOP framework caches advice calculations, this is normally
  * faster than just letting the TransactionInterceptor run and find out
  * itself that it has no work to do.
+ * <p>
+ * 实现了Advisor 包装了TransactionInterceptor和AnnotationTransactionAttributeSource的信息
  *
  * @author Rod Johnson
  * @author Juergen Hoeller
@@ -39,17 +41,24 @@ import org.springframework.util.Assert;
 @SuppressWarnings("serial")
 public class TransactionAttributeSourceAdvisor extends AbstractPointcutAdvisor {
 
+	/**
+	 * 定义AOP中使用的Interceptor和PointCut
+	 */
 	@Nullable
 	private TransactionInterceptor transactionInterceptor;
 
 	private final TransactionAttributeSourcePointcut pointcut = new TransactionAttributeSourcePointcut() {
+
+		/**
+		 * 得到事务配置属性 在对Proxy的方法进行匹配调用时会使用到这些配置属性
+		 * @return
+		 */
 		@Override
 		@Nullable
 		protected TransactionAttributeSource getTransactionAttributeSource() {
 			return (transactionInterceptor != null ? transactionInterceptor.getTransactionAttributeSource() : null);
 		}
 	};
-
 
 	/**
 	 * Create a new TransactionAttributeSourceAdvisor.
@@ -66,7 +75,6 @@ public class TransactionAttributeSourceAdvisor extends AbstractPointcutAdvisor {
 		setTransactionInterceptor(interceptor);
 	}
 
-
 	/**
 	 * Set the transaction interceptor to use for this advisor.
 	 */
@@ -82,7 +90,6 @@ public class TransactionAttributeSourceAdvisor extends AbstractPointcutAdvisor {
 		this.pointcut.setClassFilter(classFilter);
 	}
 
-
 	@Override
 	public Advice getAdvice() {
 		Assert.state(this.transactionInterceptor != null, "No TransactionInterceptor set");
@@ -93,5 +100,4 @@ public class TransactionAttributeSourceAdvisor extends AbstractPointcutAdvisor {
 	public Pointcut getPointcut() {
 		return this.pointcut;
 	}
-
 }

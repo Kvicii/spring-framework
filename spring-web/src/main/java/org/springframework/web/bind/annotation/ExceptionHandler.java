@@ -90,14 +90,15 @@ import java.lang.annotation.Target;
  * through a {@link org.springframework.web.servlet.RequestToViewNameTranslator}
  * (not declaring a response argument in the handler method signature).
  * </ul>
- *
+ * <p>
+ * spring mvc异常解析注解
  * <p>You may combine the {@code ExceptionHandler} annotation with
  * {@link ResponseStatus @ResponseStatus} for a specific HTTP error status.
  *
  * @author Arjen Poutsma
  * @author Juergen Hoeller
- * @since 3.0
  * @see org.springframework.web.context.request.WebRequest
+ * @since 3.0
  */
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)

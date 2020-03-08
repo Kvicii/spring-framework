@@ -144,7 +144,7 @@ public class ProxyFactoryBean extends ProxyCreatorSupport
 	 * @see #setInterfaces
 	 * @see AbstractSingletonProxyFactoryBean#setProxyInterfaces
 	 */
-	public void setProxyInterfaces(Class<?>[] proxyInterfaces) throws ClassNotFoundException {
+	public void setProxyInterfaces(Class<?>[] proxyInterfaces) {
 		setInterfaces(proxyInterfaces);
 	}
 
@@ -628,7 +628,7 @@ public class ProxyFactoryBean extends ProxyCreatorSupport
 			// We expected this to be an Advisor or Advice,
 			// but it wasn't. This is a configuration error.
 			throw new AopConfigException("Unknown advisor type " + next.getClass() +
-					"; Can only include Advisor or Advice type beans in interceptorNames chain except for last entry," +
+					"; Can only include Advisor or Advice type beans in interceptorNames chain except for last entry, " +
 					"which may also be target or TargetSource", ex);
 		}
 	}

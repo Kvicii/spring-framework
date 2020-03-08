@@ -16,15 +16,15 @@
 
 package org.springframework.transaction.interceptor;
 
-import java.io.Serializable;
-import java.lang.reflect.Method;
-
 import org.springframework.aop.ClassFilter;
 import org.springframework.aop.support.StaticMethodMatcherPointcut;
 import org.springframework.dao.support.PersistenceExceptionTranslator;
 import org.springframework.lang.Nullable;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.util.ObjectUtils;
+
+import java.io.Serializable;
+import java.lang.reflect.Method;
 
 /**
  * Inner class that implements a Pointcut that matches if the underlying
@@ -40,9 +40,12 @@ abstract class TransactionAttributeSourcePointcut extends StaticMethodMatcherPoi
 		setClassFilter(new TransactionAttributeSourceClassFilter());
 	}
 
-
 	@Override
 	public boolean matches(Method method, Class<?> targetClass) {
+		/**
+		 * 把事务方法的属性配置读取到TransactionAttributeSource中 有了这些事务处理的配置后
+		 * 根据当前方法调用的Method对象和目标对象 对是否需要启动事务处理拦截器进行判断
+		 */
 		TransactionAttributeSource tas = getTransactionAttributeSource();
 		return (tas == null || tas.getTransactionAttribute(method, targetClass) != null);
 	}
@@ -69,14 +72,12 @@ abstract class TransactionAttributeSourcePointcut extends StaticMethodMatcherPoi
 		return getClass().getName() + ": " + getTransactionAttributeSource();
 	}
 
-
 	/**
 	 * Obtain the underlying TransactionAttributeSource (may be {@code null}).
 	 * To be implemented by subclasses.
 	 */
 	@Nullable
 	protected abstract TransactionAttributeSource getTransactionAttributeSource();
-
 
 	/**
 	 * {@link ClassFilter} that delegates to {@link TransactionAttributeSource#isCandidateClass}
@@ -95,5 +96,4 @@ abstract class TransactionAttributeSourcePointcut extends StaticMethodMatcherPoi
 			return (tas == null || tas.isCandidateClass(clazz));
 		}
 	}
-
 }

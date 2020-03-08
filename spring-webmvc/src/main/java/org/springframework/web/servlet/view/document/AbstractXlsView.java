@@ -16,17 +16,15 @@
 
 package org.springframework.web.servlet.view.document;
 
-import java.io.IOException;
-import java.util.Map;
+import org.apache.poi.hssf.usermodel.HSSFWorkbook;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.springframework.web.servlet.view.AbstractView;
 
 import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-
-import org.apache.poi.hssf.usermodel.HSSFWorkbook;
-import org.apache.poi.ss.usermodel.Workbook;
-
-import org.springframework.web.servlet.view.AbstractView;
+import java.io.IOException;
+import java.util.Map;
 
 /**
  * Convenient superclass for Excel document views in traditional XLS format.
@@ -61,16 +59,29 @@ public abstract class AbstractXlsView extends AbstractView {
 	protected final void renderMergedOutputModel(
 			Map<String, Object> model, HttpServletRequest request, HttpServletResponse response) throws Exception {
 
-		// Create a fresh workbook instance for this render step.
+		/**
+		 * Create a fresh workbook instance for this render step.
+		 * 获取HSSFWorkbook对象或者XSSFWorkbook对象
+		 */
 		Workbook workbook = createWorkbook(model, request);
 
-		// Delegate to application-provided document code.
+		/**
+		 * Delegate to application-provided document code.
+		 * 通过这个对象对Excel文件中的数据进行处理
+		 * 应用通过定义实现buildExcelDocument抽象方法 完成数据操作
+		 */
 		buildExcelDocument(model, workbook, request, response);
 
-		// Set the content type.
+		/**
+		 * Set the content type.
+		 * 设置Response的响应输出类型
+		 */
 		response.setContentType(getContentType());
 
-		// Flush byte array to servlet output stream.
+		/**
+		 * Flush byte array to servlet output stream.
+		 * 将Excel数据写入到Response
+		 */
 		renderWorkbook(workbook, response);
 	}
 
@@ -80,7 +91,8 @@ public abstract class AbstractXlsView extends AbstractView {
 	 * <p>The default implementation creates a traditional {@link HSSFWorkbook}.
 	 * Spring-provided subclasses are overriding this for the OOXML-based variants;
 	 * custom subclasses may override this for reading a workbook from a file.
-	 * @param model the model Map
+	 *
+	 * @param model   the model Map
 	 * @param request current HTTP request (for taking the URL or headers into account)
 	 * @return the new {@link Workbook} instance
 	 */
@@ -91,6 +103,7 @@ public abstract class AbstractXlsView extends AbstractView {
 	/**
 	 * The actual render step: taking the POI {@link Workbook} and rendering
 	 * it to the given response.
+	 *
 	 * @param workbook the POI Workbook to render
 	 * @param response current HTTP response
 	 * @throws IOException when thrown by I/O methods that we're delegating to
@@ -104,9 +117,10 @@ public abstract class AbstractXlsView extends AbstractView {
 	/**
 	 * Application-provided subclasses must implement this method to populate
 	 * the Excel workbook document, given the model.
-	 * @param model the model Map
+	 *
+	 * @param model    the model Map
 	 * @param workbook the Excel workbook to populate
-	 * @param request in case we need locale etc. Shouldn't look at attributes.
+	 * @param request  in case we need locale etc. Shouldn't look at attributes.
 	 * @param response in case we need to set cookies. Shouldn't write to it.
 	 */
 	protected abstract void buildExcelDocument(

@@ -40,13 +40,15 @@ import org.springframework.core.io.Resource;
  * <p><b>For advanced needs, consider using a {@link DefaultListableBeanFactory} with
  * an {@link XmlBeanDefinitionReader}.</b> The latter allows for reading from multiple XML
  * resources and is highly configurable in its actual XML parsing behavior.
+ * <p>
+ * 可以读取以XML文件定义的BeanDefinition的IoC容器
  *
  * @author Rod Johnson
  * @author Juergen Hoeller
  * @author Chris Beams
- * @since 15 April 2001
  * @see org.springframework.beans.factory.support.DefaultListableBeanFactory
  * @see XmlBeanDefinitionReader
+ * @since 15 April 2001
  * @deprecated as of Spring 3.1 in favor of {@link DefaultListableBeanFactory} and
  * {@link XmlBeanDefinitionReader}
  */
@@ -54,12 +56,15 @@ import org.springframework.core.io.Resource;
 @SuppressWarnings({"serial", "all"})
 public class XmlBeanFactory extends DefaultListableBeanFactory {
 
+	/**
+	 * 对这些XML形式的信息的处理实际上是由XmlBeanDefinitionReader完成的
+	 */
 	private final XmlBeanDefinitionReader reader = new XmlBeanDefinitionReader(this);
-
 
 	/**
 	 * Create a new XmlBeanFactory with the given resource,
 	 * which must be parsable using DOM.
+	 *
 	 * @param resource the XML resource to load bean definitions from
 	 * @throws BeansException in case of loading or parsing errors
 	 */
@@ -70,7 +75,8 @@ public class XmlBeanFactory extends DefaultListableBeanFactory {
 	/**
 	 * Create a new XmlBeanFactory with the given input stream,
 	 * which must be parsable using DOM.
-	 * @param resource the XML resource to load bean definitions from
+	 *
+	 * @param resource          the XML resource to load bean definitions from
 	 * @param parentBeanFactory parent bean factory
 	 * @throws BeansException in case of loading or parsing errors
 	 */

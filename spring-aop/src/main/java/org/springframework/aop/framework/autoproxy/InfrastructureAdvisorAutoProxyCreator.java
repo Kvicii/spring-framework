@@ -23,6 +23,7 @@ import org.springframework.lang.Nullable;
 /**
  * Auto-proxy creator that considers infrastructure Advisor beans only,
  * ignoring any application-defined Advisors.
+ * 继承了AbstractAutoProxyCreator 这是一个后置处理器类
  *
  * @author Juergen Hoeller
  * @since 2.0.7
