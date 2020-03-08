@@ -1061,6 +1061,9 @@ public abstract class FrameworkServlet extends HttpServletBean implements Applic
 	/**
 	 * Process this request, publishing an event regardless of the outcome.
 	 * <p>The actual event handling is performed by the abstract
+	 * <p>
+	 * Servlet的doGet/doPost由该子类重写 最终调用了该方法
+	 * <p>
 	 * {@link #doService} template method.
 	 */
 	protected final void processRequest(HttpServletRequest request, HttpServletResponse response)
@@ -1069,15 +1072,18 @@ public abstract class FrameworkServlet extends HttpServletBean implements Applic
 		long startTime = System.currentTimeMillis();
 		Throwable failureCause = null;
 
+		// 获取上一个请求保存的LocaleContext
 		LocaleContext previousLocaleContext = LocaleContextHolder.getLocaleContext();
+		// 建立新的LocaleContext
 		LocaleContext localeContext = buildLocaleContext(request);
-
+		// 获取上一个请求保存的RequestAttributes
 		RequestAttributes previousAttributes = RequestContextHolder.getRequestAttributes();
+		// 建立新的RequestAttributes
 		ServletRequestAttributes requestAttributes = buildRequestAttributes(request, response, previousAttributes);
-
+		// 异步管理器WebAsyncManager
 		WebAsyncManager asyncManager = WebAsyncUtils.getAsyncManager(request);
 		asyncManager.registerCallableInterceptor(FrameworkServlet.class.getName(), new RequestBindingInterceptor());
-
+		// 将新的RequestAttributes绑定到LocaleContext
 		initContextHolders(request, localeContext, requestAttributes);
 
 		try {

@@ -618,7 +618,7 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 		}
 
 		/**
-		 *  Initialize the bean instance.
+		 * Initialize the bean instance.
 		 * 对Bean初始化 Bean属性的填充
 		 * 依赖注入常常在此发生 这个exposedObject在初始化之后会作为依赖注入完成后的Bean返回
 		 */

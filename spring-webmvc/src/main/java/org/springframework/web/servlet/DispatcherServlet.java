@@ -971,6 +971,7 @@ public class DispatcherServlet extends FrameworkServlet {
 	 */
 	@Override
 	protected void doService(HttpServletRequest request, HttpServletResponse response) throws Exception {
+
 		logRequest(request);
 
 		// Keep a snapshot of the request attributes in case of an include,
@@ -995,7 +996,7 @@ public class DispatcherServlet extends FrameworkServlet {
 		request.setAttribute(LOCALE_RESOLVER_ATTRIBUTE, this.localeResolver);
 		request.setAttribute(THEME_RESOLVER_ATTRIBUTE, this.themeResolver);
 		request.setAttribute(THEME_SOURCE_ATTRIBUTE, getThemeSource());
-
+		// 重定向参数携带设置
 		if (this.flashMapManager != null) {
 			FlashMap inputFlashMap = this.flashMapManager.retrieveAndUpdate(request, response);
 			if (inputFlashMap != null) {
@@ -1006,9 +1007,7 @@ public class DispatcherServlet extends FrameworkServlet {
 		}
 
 		try {
-			/**
-			 * 实际分发请求的入口
-			 */
+			// 实际分发请求的入口
 			doDispatch(request, response);
 		} finally {
 			if (!WebAsyncUtils.getAsyncManager(request).isConcurrentHandlingStarted()) {
