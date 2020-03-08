@@ -1066,6 +1066,7 @@ public class DispatcherServlet extends FrameworkServlet {
 	protected void doDispatch(HttpServletRequest request, HttpServletResponse response) throws Exception {
 		HttpServletRequest processedRequest = request;
 		HandlerExecutionChain mappedHandler = null;
+		// 是否是多部件请求(文件上传)
 		boolean multipartRequestParsed = false;
 
 		WebAsyncManager asyncManager = WebAsyncUtils.getAsyncManager(request);
@@ -1078,27 +1079,32 @@ public class DispatcherServlet extends FrameworkServlet {
 			Exception dispatchException = null;
 
 			try {
+				// 检查是否是文件上传的请求 如果是文件上传请求 原始的request和多部件检验的request应该是不一致的
 				processedRequest = checkMultipart(request);
 				multipartRequestParsed = (processedRequest != request);
 
 				/**
 				 * Determine handler for the current request.
-				 * 根据请求得到对应的Handler
+				 * 1.根据请求得到对应的Handler 这里并不是直接返回Controller 而是返回HandlerExecutionChain执行器链
+				 * 该对象封装了Handler和Interceptor
 				 */
 				mappedHandler = getHandler(processedRequest);
 				if (mappedHandler == null) {
+					// 没有找到Handler 返回404
 					noHandlerFound(processedRequest, response);
 					return;
 				}
 
 				/**
 				 * Determine handler adapter for the current request.
-				 * 实际调用Handler位置 在执行Handler之前 用HandlerAdapter检查Handler的合法性
-				 * 是否是按照Spring的要求编写的Handler
+				 * 2.实际调用Handler位置 在执行Handler之前 用HandlerAdapter检查Handler的合法性
+				 * 是否是按照Spring的要求编写的Handler 获取处理请求的处理器适配器
+				 * 由于Handler的声明方式可以有注解或接口实现 需要根据不同的反射工具取实现 此处就是拿到不同的反射工具类 便于之后的反射调用
 				 */
 				HandlerAdapter ha = getHandlerAdapter(mappedHandler.getHandler());
 
 				// Process last-modified header, if supported by the handler.
+				// 获取请求方式
 				String method = request.getMethod();
 				boolean isGet = "GET".equals(method);
 				if (isGet || "HEAD".equals(method)) {
@@ -1108,6 +1114,7 @@ public class DispatcherServlet extends FrameworkServlet {
 					}
 				}
 				/**
+				 * 第一个拦截时机 请求到达Servlet之前进行拦截
 				 * 为注册的拦截器配置预处理方法
 				 * 调用Handler的拦截器 从HandlerExecutionChain中取出Interceptor进行前置处理
 				 */
@@ -1117,7 +1124,7 @@ public class DispatcherServlet extends FrameworkServlet {
 
 				/**
 				 * Actually invoke the handler.
-				 * 通过HandlerAdapter的handle方法实际触发对Controller的handleRequest方法的调用
+				 * 3.通过HandlerAdapter的handle方法实际触发对Controller的handleRequest方法的调用
 				 */
 				mv = ha.handle(processedRequest, response, mappedHandler.getHandler());
 
@@ -1129,6 +1136,7 @@ public class DispatcherServlet extends FrameworkServlet {
 				 */
 				applyDefaultViewName(processedRequest, mv);
 				/**
+				 * 第二个拦截时机 视图渲染完成时之后拦截
 				 * 对Handler的拦截器进行后置处理
 				 */
 				mappedHandler.applyPostHandle(processedRequest, response, mv);
@@ -1140,12 +1148,16 @@ public class DispatcherServlet extends FrameworkServlet {
 				dispatchException = new NestedServletException("Handler dispatch failed", err);
 			}
 			/**
-			 * 使用视图对ModelAndView的数据进行展现
+			 * 4.使用视图对ModelAndView的数据进行展现 即跳转视图页面进行数据展示
 			 */
 			processDispatchResult(processedRequest, response, mappedHandler, mv, dispatchException);
 		} catch (Exception ex) {
+			// 第三个拦截时机 页面跳转之后拦截
+			// 最终调用HandlerExecutionChain的triggerAfterCompletion
 			triggerAfterCompletion(processedRequest, response, mappedHandler, ex);
 		} catch (Throwable err) {
+			// 第三个拦截时机 页面跳转之后拦截
+			// 最终调用HandlerExecutionChain的triggerAfterCompletion
 			triggerAfterCompletion(processedRequest, response, mappedHandler,
 					new NestedServletException("Handler processing failed", err));
 		} finally {
