@@ -144,7 +144,7 @@ public class InternalResourceView extends AbstractUrlBasedView {
 
 		/**
 		 * Expose the model object as request attributes.
-		 * 对数据进行处理 把模型对象存放到ServletContext中
+		 * 对数据进行处理 把模型对象存放到ServletContext中 将ModelMap中的数据暴露到request域中
 		 */
 		exposeModelAsRequestAttributes(model, request);
 		/**

@@ -634,7 +634,7 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 
 				// Last step: publish corresponding event.
 				/**
-				 * 发布容器事件 结束refresh过程
+				 * 发布容器事件 结束refresh过程 spring mvc 组件初始化由publishEvent触发
 				 * 主要是调用{@link LifecycleProcessor}的onRefresh()并且发布事件ContextRefreshEvent
 				 */
 				finishRefresh();

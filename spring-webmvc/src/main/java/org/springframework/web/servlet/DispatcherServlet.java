@@ -341,60 +341,72 @@ public class DispatcherServlet extends FrameworkServlet {
 	 */
 	private boolean cleanupAfterInclude = true;
 
+	// Spring MVC 9组件-----------------------begin-------------------------------
+	// 9组件都是接口 只定义规范
 	/**
 	 * MultipartResolver used by this servlet.
+	 * 多部件解析器
 	 */
 	@Nullable
 	private MultipartResolver multipartResolver;
 
 	/**
 	 * LocaleResolver used by this servlet.
+	 * 区域/国际化解析器
 	 */
 	@Nullable
 	private LocaleResolver localeResolver;
 
 	/**
 	 * ThemeResolver used by this servlet.
+	 * 主题解析器
 	 */
 	@Nullable
 	private ThemeResolver themeResolver;
 
 	/**
 	 * List of HandlerMappings used by this servlet.
+	 * 处理器映射器
 	 */
 	@Nullable
 	private List<HandlerMapping> handlerMappings;
 
 	/**
 	 * List of HandlerAdapters used by this servlet.
+	 * 处理器适配器
 	 */
 	@Nullable
 	private List<HandlerAdapter> handlerAdapters;
 
 	/**
 	 * List of HandlerExceptionResolvers used by this servlet.
+	 * 异常解析器
 	 */
 	@Nullable
 	private List<HandlerExceptionResolver> handlerExceptionResolvers;
 
 	/**
 	 * RequestToViewNameTranslator used by this servlet.
+	 * 默认视图名转换器
 	 */
 	@Nullable
 	private RequestToViewNameTranslator viewNameTranslator;
 
 	/**
 	 * FlashMapManager used by this servlet.
+	 * flush属性管理器
 	 */
 	@Nullable
 	private FlashMapManager flashMapManager;
 
 	/**
 	 * List of ViewResolvers used by this servlet.
+	 * 视图解析器
 	 */
 	@Nullable
 	private List<ViewResolver> viewResolvers;
 
+	// Spring MVC 9组件-------------------end-----------------------------------
 
 	/**
 	 * Create a new {@code DispatcherServlet} that will create its own internal web
@@ -555,6 +567,7 @@ public class DispatcherServlet extends FrameworkServlet {
 	protected void initStrategies(ApplicationContext context) {
 		/**
 		 * 对各种MVC框架的实现元素的初始化
+		 * 多部件解析器必须按照id multipartResolver进行解析
 		 */
 		initMultipartResolver(context);
 		/**
@@ -1210,6 +1223,7 @@ public class DispatcherServlet extends FrameworkServlet {
 
 		// Did the handler return a view to render?
 		if (mv != null && !mv.wasCleared()) {
+			// 实际完成渲染
 			render(mv, request, response);
 			if (errorView) {
 				WebUtils.clearErrorRequestAttributes(request);
