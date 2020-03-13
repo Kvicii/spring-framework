@@ -34,6 +34,9 @@ import java.util.Iterator;
  * {@link org.springframework.beans.factory.ListableBeanFactory} for typical
  * use cases. This interface is just meant to allow for framework-internal
  * plug'n'play even when needing access to bean factory configuration methods.
+ * <p>
+ * 既是层次性又是集合性的接口又是单一性的接口
+ * 层次性依赖查找的安全性取决于其扩展的单一或集合类型的BeanFactory接口
  *
  * @author Juergen Hoeller
  * @see org.springframework.context.support.AbstractApplicationContext#getBeanFactory()
