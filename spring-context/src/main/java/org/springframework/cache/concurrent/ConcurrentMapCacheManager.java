@@ -16,18 +16,18 @@
 
 package org.springframework.cache.concurrent;
 
+import org.springframework.beans.factory.BeanClassLoaderAware;
+import org.springframework.cache.Cache;
+import org.springframework.cache.CacheManager;
+import org.springframework.core.serializer.support.SerializationDelegate;
+import org.springframework.lang.Nullable;
+
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
-
-import org.springframework.beans.factory.BeanClassLoaderAware;
-import org.springframework.cache.Cache;
-import org.springframework.cache.CacheManager;
-import org.springframework.core.serializer.support.SerializationDelegate;
-import org.springframework.lang.Nullable;
 
 /**
  * {@link CacheManager} implementation that lazily builds {@link ConcurrentMapCache}
@@ -43,8 +43,8 @@ import org.springframework.lang.Nullable;
  * {@link org.springframework.cache.caffeine.CaffeineCacheManager}.
  *
  * @author Juergen Hoeller
- * @since 3.1
  * @see ConcurrentMapCache
+ * @since 3.1
  */
 public class ConcurrentMapCacheManager implements CacheManager, BeanClassLoaderAware {
 
@@ -89,8 +89,7 @@ public class ConcurrentMapCacheManager implements CacheManager, BeanClassLoaderA
 				this.cacheMap.put(name, createConcurrentMapCache(name));
 			}
 			this.dynamic = false;
-		}
-		else {
+		} else {
 			this.dynamic = true;
 		}
 	}
@@ -126,6 +125,7 @@ public class ConcurrentMapCacheManager implements CacheManager, BeanClassLoaderA
 	 * contract is required on cached values.
 	 * <p>Note: A change of the store-by-value setting will reset all existing caches,
 	 * if any, to reconfigure them with the new store-by-value requirement.
+	 *
 	 * @since 4.3
 	 */
 	public void setStoreByValue(boolean storeByValue) {
@@ -140,6 +140,7 @@ public class ConcurrentMapCacheManager implements CacheManager, BeanClassLoaderA
 	 * Return whether this cache manager stores a copy of each entry or
 	 * a reference for all its caches. If store by value is enabled, any
 	 * cache entry must be serializable.
+	 *
 	 * @since 4.3
 	 */
 	public boolean isStoreByValue() {
@@ -185,6 +186,7 @@ public class ConcurrentMapCacheManager implements CacheManager, BeanClassLoaderA
 
 	/**
 	 * Create a new ConcurrentMapCache instance for the specified cache name.
+	 *
 	 * @param name the name of the cache
 	 * @return the ConcurrentMapCache (or a decorator thereof)
 	 */
