@@ -101,53 +101,53 @@ task extractDocResources(type: Copy, dependsOn: downloadResources) {
 	into "$buildDir/docs/spring-docs-resources/"
 }
 
-asciidoctorj {
-	modules {
-		pdf {
-			version '1.5.0-beta.8'
-		}
-	}
-	fatalWarnings ".*"
-}
+//asciidoctorj {
+//	modules {
+//		pdf {
+//			version '1.5.0-beta.8'
+//		}
+//	}
+//	fatalWarnings ".*"
+//}
 
 /**
  * Produce the Spring Framework Reference documentation
  * from "src/docs/asciidoc" into  "build/asciidoc/html5"
  */
-asciidoctor {
-	baseDirFollowsSourceDir()
-	configurations 'asciidoctorExt'
-	sources {
-		include '*.adoc'
-	}
-	outputDir "$buildDir/docs/ref-docs/"
-	resources {
-		from(sourceDir) {
-			include 'images/*', 'css/**', 'js/**'
-		}
-		from extractDocResources
-	}
-	logDocuments = true
-	outputOptions {
-		backends = ["html5", "pdf"]
-	}
-	options doctype: 'book', eruby: 'erubis'
-	attributes([
-			icons: 'font',
-			idprefix: '',
-			idseparator: '-',
-			docinfo: 'shared',
-			revnumber: project.version,
-			sectanchors: '',
-			sectnums: '',
-			'source-highlighter': 'highlight.js',
-			highlightjsdir: 'js/highlight',
-			'highlightjs-theme': 'github',
-			stylesdir: 'css/',
-			stylesheet: 'stylesheet.css',
-			'spring-version': project.version
-	])
-}
+//asciidoctor {
+//	baseDirFollowsSourceDir()
+//	configurations 'asciidoctorExt'
+//	sources {
+//		include '*.adoc'
+//	}
+//	outputDir "$buildDir/docs/ref-docs/"
+//	resources {
+//		from(sourceDir) {
+//			include 'images/*', 'css/**', 'js/**'
+//		}
+//		from extractDocResources
+//	}
+//	logDocuments = true
+//	outputOptions {
+//		backends = ["html5", "pdf"]
+//	}
+//	options doctype: 'book', eruby: 'erubis'
+//	attributes([
+//			icons: 'font',
+//			idprefix: '',
+//			idseparator: '-',
+//			docinfo: 'shared',
+//			revnumber: project.version,
+//			sectanchors: '',
+//			sectnums: '',
+//			'source-highlighter': 'highlight.js',
+//			highlightjsdir: 'js/highlight',
+//			'highlightjs-theme': 'github',
+//			stylesdir: 'css/',
+//			stylesheet: 'stylesheet.css',
+//			'spring-version': project.version
+//	])
+//}
 
 /**
  * Zip all docs (API and reference) into a single archive
