@@ -287,9 +287,7 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 		Object bean;
 
 		// Eagerly check singleton cache for manually registered singletons.
-		/**
-		 * 从缓存中取Bean 对于已经被创建过的单例Bean 不需要重复创建 直接从缓存中拿
-		 */
+		// 从缓存中取Bean 对于已经被创建过的单例Bean 不需要重复创建 直接从缓存中拿
 		Object sharedInstance = getSingleton(beanName);
 		if (sharedInstance != null && args == null) {
 			if (logger.isTraceEnabled()) {
@@ -300,9 +298,7 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 					logger.trace("Returning cached instance of singleton bean '" + beanName + "'");
 				}
 			}
-			/**
-			 * 完成FactoryBean的处理 取得FactoryBean的生产结果
-			 */
+			// 完成FactoryBean的处理 取得FactoryBean的生产结果
 			bean = getObjectForBeanInstance(sharedInstance, name, beanName, null);
 		} else {
 			/**
@@ -314,8 +310,8 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 				throw new BeanCurrentlyInCreationException(beanName);
 			}
 
-			// Check if bean definition exists in this factory.
 			/**
+			 * Check if bean definition exists in this factory.
 			 * 对IoC容器的BeanDefinition是否存在进行检查
 			 * 1.首先检查当前BeanFactory中是否能获取所需要的Bean
 			 * 2.当前工厂找不到 到双亲BeanFactory取
@@ -339,9 +335,7 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 				}
 			}
 
-			/**
-			 * 双重检查锁将Bean标记为创建完成
-			 */
+			// 双重检查锁将Bean标记为创建完成
 			if (!typeCheckOnly) {
 				markBeanAsCreated(beanName);
 			}

@@ -180,7 +180,7 @@ public class InternalResourceView extends AbstractUrlBasedView {
 			 * Note: The forwarded resource is supposed to determine the content type itself.
 			 * 转发请求到内部定义好的资源上
 			 * (如JSP页面 JSP页面的展现由Web容器负责 在这种情况下 View起到的作用只是转发请求)
- 			 */
+			 */
 			if (logger.isDebugEnabled()) {
 				logger.debug("Forwarding to [" + getUrl() + "]");
 			}

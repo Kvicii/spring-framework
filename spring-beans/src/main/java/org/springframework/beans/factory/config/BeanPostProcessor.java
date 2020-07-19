@@ -102,5 +102,4 @@ public interface BeanPostProcessor {
 	default Object postProcessAfterInitialization(Object bean, String beanName) throws BeansException {
 		return bean;
 	}
-
 }

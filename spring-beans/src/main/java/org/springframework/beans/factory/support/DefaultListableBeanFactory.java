@@ -878,7 +878,8 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
 			logger.trace("Pre-instantiating singletons in " + this);
 		}
 
-		/** Iterate over a copy to allow for init methods which in turn register new bean definitions.
+		/**
+		 * Iterate over a copy to allow for init methods which in turn register new bean definitions.
 		 * While this may not be part of the regular factory bootstrap, it does otherwise work fine.
 		 * 放所有Bean名称的List
 		 */
@@ -886,11 +887,11 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
 
 		// Trigger initialization of all non-lazy singleton beans...
 		/**
-		 * 触发getBean()进行依赖注入
-		 * 这个getBean()和依赖注入完成的操作是一致的 只不过发生的地点不同
-		 * 如果不设置lazy-init属性 那么这个依赖注入是发生在容器的初始化结束之后 第一次向容器索要的Bean的时候
-		 * 如果设置了lazy-init属性 会对beanDefinitionMap中所有的Bean进行依赖注入 这样在初始化过程结束之后
-		 * 容器执行getBean取得的都是准备好的Bean 不需要再次进行依赖注入
+		 * 触发getBean进行依赖注入
+		 *
+		 * 这个getBean和依赖注入完成的操作是一致的 只不过发生的地点不同
+		 * 1.如果设置lazy-init=true 那么这个依赖注入是发生在容器的初始化结束之后 第一次向容器索要的Bean的时候
+		 * 2.如果设置lazy-init=false 会对beanDefinitionMap中所有的Bean进行依赖注入 这样在初始化过程结束之后 容器执行getBean取得的都是准备好的Bean 不需要再次进行依赖注入
 		 */
 		for (String beanName : beanNames) {
 			// 合并父BeanDefinition对象

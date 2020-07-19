@@ -1127,7 +1127,7 @@ public class DispatcherServlet extends FrameworkServlet {
 					}
 				}
 				/**
-				 * 第一个拦截时机 请求到达Servlet之前进行拦截
+				 * a.第一个拦截时机 请求到达Servlet之前进行拦截
 				 * 为注册的拦截器配置预处理方法
 				 * 调用Handler的拦截器 从HandlerExecutionChain中取出Interceptor进行前置处理
 				 */
@@ -1149,7 +1149,7 @@ public class DispatcherServlet extends FrameworkServlet {
 				 */
 				applyDefaultViewName(processedRequest, mv);
 				/**
-				 * 第二个拦截时机 视图渲染完成时之后拦截
+				 * b.第二个拦截时机 视图渲染完成时之后拦截
 				 * 对Handler的拦截器进行后置处理
 				 */
 				mappedHandler.applyPostHandle(processedRequest, response, mv);
@@ -1165,7 +1165,7 @@ public class DispatcherServlet extends FrameworkServlet {
 			 */
 			processDispatchResult(processedRequest, response, mappedHandler, mv, dispatchException);
 		} catch (Exception ex) {
-			// 第三个拦截时机 页面跳转之后拦截
+			// c.第三个拦截时机 页面跳转之后拦截
 			// 最终调用HandlerExecutionChain的triggerAfterCompletion
 			triggerAfterCompletion(processedRequest, response, mappedHandler, ex);
 		} catch (Throwable err) {

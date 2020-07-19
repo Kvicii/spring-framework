@@ -584,74 +584,75 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 				// BeanFactory的后置处理工作
 				postProcessBeanFactory(beanFactory);
 
-				// Invoke factory processors registered as beans in the context.
 				/**
+				 * Invoke factory processors registered as beans in the context.
 				 * 调用BeanFactory的后处理器 这些后处理器是在Bean定义中向容器注册的
 				 * 实例化实现了{@link BeanFactoryPostProcessor}接口的Bean 调用接口方法
 				 */
 				invokeBeanFactoryPostProcessors(beanFactory);
 
-				// Register bean processors that intercept bean creation.
 				/**
+				 * Register bean processors that intercept bean creation.
 				 * 注册Bean的后处理器 在Bean创建过程的前后才被调用
 				 */
 				registerBeanPostProcessors(beanFactory);
 
-				// Initialize message source for this context.
 				/**
+				 * Initialize message source for this context.
 				 * 初始化MessageSource组件(做国际化功能 消息绑定|解析)
 				 */
 				initMessageSource();
 
-				// Initialize event multicaster for this context.
 				/**
+				 * Initialize event multicaster for this context.
 				 * 初始化上下文中的事件机制
 				 */
 				initApplicationEventMulticaster();
 
-				// Initialize other special beans in specific context subclasses.
 				/**
+				 * Initialize other special beans in specific context subclasses.
 				 * 初始化其他特殊的Bean
 				 * 子类可以重写该方法 在容器refresh()时自定义逻辑 如Tomcat Jetty等Web服务器
 				 */
 				onRefresh();
 
-				// Check for listener beans and register them.
 				/**
+				 * Check for listener beans and register them.
 				 * 注册监听器
 				 * 即实现了{@link ApplicationListener}接口的Bean
 				 */
 				registerListeners();
 
-				// Instantiate all remaining (non-lazy-init) singletons.
 				/**
+				 * Instantiate all remaining (non-lazy-init) singletons.
 				 * 实例化所有的non-lazy-init(非延迟初始化)单例
 				 * 相当于提前进行依赖注入
 				 * 填充属性 初始化方法的调用(实现InitializingBean或init-method)
 				 * Bean的后置处理器调用
+				 * 最重要的方法 IOC入口
 				 */
 				finishBeanFactoryInitialization(beanFactory);
 
-				// Last step: publish corresponding event.
 				/**
+				 * Last step: publish corresponding event.
 				 * 发布容器事件 结束refresh过程 spring mvc 组件初始化由publishEvent触发
 				 * 主要是调用{@link LifecycleProcessor}的onRefresh()并且发布事件ContextRefreshEvent
 				 */
-				finishRefresh();
+				finishRefresh();    // SpringMVC入口
 			} catch (BeansException ex) {
 				if (logger.isWarnEnabled()) {
 					logger.warn("Exception encountered during context initialization - " +
 							"cancelling refresh attempt: " + ex);
 				}
 
-				// Destroy already created singletons to avoid dangling resources.
 				/**
+				 * Destroy already created singletons to avoid dangling resources.
 				 * 为防止Bean资源占用 在异常处理中 销毁已经在前面的过程中生成的单例Bean
 				 */
 				destroyBeans();
 
-				// Reset 'active' flag.
 				/**
+				 * Reset 'active' flag.
 				 * 重置active标志
 				 */
 				cancelRefresh(ex);
@@ -991,7 +992,7 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 		getLifecycleProcessor().onRefresh();
 
 		// Publish the final event.
-		publishEvent(new ContextRefreshedEvent(this));
+		publishEvent(new ContextRefreshedEvent(this));    // SpringMVC入口
 
 		// Participate in LiveBeansView MBean, if active.
 		LiveBeansView.registerApplicationContext(this);

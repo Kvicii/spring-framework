@@ -34,6 +34,8 @@ public class IocTest {
 
 	/**
 	 *  Ioc 容器源码分析基础案例
+	 *  在Bean注入过程中的初始化过程 AbstractAutowireCapableBeanFactory#initializeBean 使用后置处理器生成代理对象
+	 *  最终调用 AbstractAutoProxyCreator#wrapIfNecessary 中的createProxy方法生成代理对象
 	 */
 	@Test
 	public void testAOP() {

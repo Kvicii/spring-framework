@@ -11,7 +11,7 @@ import java.util.Map;
  */
 @Controller
 @RequestMapping("/demo")
-public class DemoController {
+public class MvcTestController {
 
 
 	@RequestMapping("/handle01")

@@ -11,11 +11,11 @@
 
 	<!--循环依赖问题-->
 	<bean id="lagouBean" class="org.springframework.read.LagouBean">
-		<property name="ItBean" ref="itBean"/>
+<!--		<property name="ItBean" ref="itBean"/>-->
 	</bean>
-	<bean id="itBean" class="org.springframework.read.ItBean">
-		<property name="LagouBean" ref="lagouBean"/>
-	</bean>
+<!--	<bean id="itBean" class="org.springframework.read.ItBean">-->
+<!--		<property name="LagouBean" ref="lagouBean"/>-->
+<!--	</bean>-->
 
 
 	<!--	<bean id="myBeanFactoryPostProcessor" class="org.springframework.read.MyBeanFactoryPostProcessor"/>-->

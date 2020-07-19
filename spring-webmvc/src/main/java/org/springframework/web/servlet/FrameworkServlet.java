@@ -721,7 +721,7 @@ public abstract class FrameworkServlet extends HttpServletBean implements Applic
 				(ConfigurableWebApplicationContext) BeanUtils.instantiateClass(contextClass);
 		/**
 		 * 设置参数
-		 * 双亲上下文、Bean定义的文件位置等
+		 * 双亲上下文 | Bean定义的文件位置等
 		 */
 		wac.setEnvironment(getEnvironment());
 		wac.setParent(parent);
