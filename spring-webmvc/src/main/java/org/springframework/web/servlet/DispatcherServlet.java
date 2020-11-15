@@ -1164,10 +1164,6 @@ public class DispatcherServlet extends FrameworkServlet {
 			 * 4.使用视图对ModelAndView的数据进行展现 即跳转视图页面进行数据展示
 			 */
 			processDispatchResult(processedRequest, response, mappedHandler, mv, dispatchException);
-		} catch (Exception ex) {
-			// c.第三个拦截时机 页面跳转之后拦截
-			// 最终调用HandlerExecutionChain的triggerAfterCompletion
-			triggerAfterCompletion(processedRequest, response, mappedHandler, ex);
 		} catch (Throwable err) {
 			// 第三个拦截时机 页面跳转之后拦截
 			// 最终调用HandlerExecutionChain的triggerAfterCompletion
