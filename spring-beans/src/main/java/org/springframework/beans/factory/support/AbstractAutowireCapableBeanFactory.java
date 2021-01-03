@@ -595,11 +595,12 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 		/**
 		 * Eagerly cache singletons to be able to resolve circular references
 		 * even when triggered by lifecycle interfaces like BeanFactoryAware.
-		 * 只有 单例 并且 通过 set 注入的方式才能解决循环依赖
+		 *
+		 * 只有 单例 && 通过 set 注入的方式才能解决循环依赖
 		 * 1.多例无法解决循环依赖的原因是 -> 没有多例缓存池
-		 * 2.通过构造函数注入无法解决循环依赖的原因是 -> 早期对象暴露在此位置 而构造方式注入的对象是通过createBeanInstance方法(在该方法中还未暴露 所以解决不了循环依赖)
-		 * 如A中构造器注入了B 那么A在关键的方法addSingletonFactory之前就去初始化了B 导致三级缓存中根本没有A 所以会发生死循环
-		 * Spring发现之后就抛出异常了，本质上是根据Bean的状态给Bean进行mark 如果递归调用时发现bean当时正在创建中 那么就抛出循环依赖的异常即可
+		 * 2.通过构造函数注入无法解决循环依赖的原因是 -> 早期对象暴露在此位置 而构造方式注入的对象是通过 createBeanInstance 方法(在该方法中还未暴露 所以解决不了循环依赖)
+		 * 如A中构造器注入了B 那么A在关键的方法 addSingletonFactory 之前就去初始化了B 导致三级缓存中根本没有A 所以会发生死循环
+		 * Spring发现之后就抛出异常了 本质上是根据Bean的状态给Bean进行mark 如果递归调用时发现bean当时正在创建中 那么就抛出循环依赖的异常即可
 		 *
 		 * 处理循环依赖
 		 */
@@ -618,7 +619,7 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 		/**
 		 * Initialize the bean instance.
 		 * 对Bean初始化 Bean属性的填充
-		 * 依赖注入常常在此发生 这个exposedObject在初始化之后会作为依赖注入完成后的Bean返回
+		 * 依赖注入常常在此发生 这个 exposedObject 在初始化之后会作为依赖注入完成后的Bean返回
 		 */
 		Object exposedObject = bean;
 		try {

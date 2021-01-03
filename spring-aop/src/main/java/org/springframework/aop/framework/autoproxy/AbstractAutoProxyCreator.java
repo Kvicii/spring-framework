@@ -347,7 +347,6 @@ public abstract class AbstractAutoProxyCreator extends ProxyProcessorSupport
 	/**
 	 * Wrap the given bean if necessary, i.e. if it is eligible for being proxied.
 	 * <p>
-	 * <p>
 	 * 完成Bean代理对象的生成
 	 *
 	 * @param bean     the raw bean instance
