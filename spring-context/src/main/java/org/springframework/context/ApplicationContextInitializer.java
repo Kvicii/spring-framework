@@ -30,19 +30,22 @@ package org.springframework.context;
  * whether Spring's {@link org.springframework.core.Ordered Ordered} interface has been
  * implemented or if the @{@link org.springframework.core.annotation.Order Order}
  * annotation is present and to sort instances accordingly if so prior to invocation.
+ * <p>
+ * 扩展点 对于自己实现的组件 可以通过实现该接口 在SpringBoot启动时进行加载并做BeanPostProcessor处理
  *
- * @author Chris Beams
- * @since 3.1
  * @param <C> the application context type
+ * @author Chris Beams
  * @see org.springframework.web.context.ContextLoader#customizeContext
  * @see org.springframework.web.context.ContextLoader#CONTEXT_INITIALIZER_CLASSES_PARAM
  * @see org.springframework.web.servlet.FrameworkServlet#setContextInitializerClasses
  * @see org.springframework.web.servlet.FrameworkServlet#applyInitializers
+ * @since 3.1
  */
 public interface ApplicationContextInitializer<C extends ConfigurableApplicationContext> {
 
 	/**
 	 * Initialize the given application context.
+	 *
 	 * @param applicationContext the application to configure
 	 */
 	void initialize(C applicationContext);

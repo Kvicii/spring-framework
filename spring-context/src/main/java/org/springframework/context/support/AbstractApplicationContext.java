@@ -588,6 +588,9 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 				 * Invoke factory processors registered as beans in the context.
 				 * 调用BeanFactory的后处理器 这些后处理器是在Bean定义中向容器注册的
 				 * 实例化实现了{@link BeanFactoryPostProcessor}接口的Bean 调用接口方法
+				 *
+				 * 关键扩展点
+				 * 一些三方框架的扩展点(如Dubbo)会在此处注册
 				 */
 				invokeBeanFactoryPostProcessors(beanFactory);
 
@@ -612,7 +615,9 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 				/**
 				 * Initialize other special beans in specific context subclasses.
 				 * 初始化其他特殊的Bean
-				 * 子类可以重写该方法 在容器refresh()时自定义逻辑 如Tomcat Jetty等Web服务器
+				 *
+				 * 关键扩展点
+				 * 子类可以重写该方法 在容器refresh()时自定义逻辑 如Tomcat(即ServletWebServerApplicationContext) Jetty等Web服务器
 				 */
 				onRefresh();
 
@@ -625,6 +630,9 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 
 				/**
 				 * Instantiate all remaining (non-lazy-init) singletons.
+				 *
+				 * 关键扩展点
+				 *
 				 * 实例化所有的non-lazy-init(非延迟初始化)单例
 				 * 相当于提前进行依赖注入
 				 * 填充属性 初始化方法的调用(实现InitializingBean或init-method)
@@ -636,7 +644,7 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 				/**
 				 * Last step: publish corresponding event.
 				 * 发布容器事件 结束refresh过程 spring mvc 组件初始化由publishEvent触发
-				 * 主要是调用{@link LifecycleProcessor}的onRefresh()并且发布事件ContextRefreshEvent
+				 * 主要是调用{@link LifecycleProcessor#onRefresh()}发布ContextRefreshEvent事件
 				 */
 				finishRefresh();    // SpringMVC入口
 			} catch (BeansException ex) {
@@ -957,6 +965,7 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 		}
 
 		// Initialize LoadTimeWeaverAware beans early to allow for registering their transformers early.
+		// 数据库连接池会在此处进行初始化
 		String[] weaverAwareNames = beanFactory.getBeanNamesForType(LoadTimeWeaverAware.class, false, false);
 		for (String weaverAwareName : weaverAwareNames) {
 			getBean(weaverAwareName);
@@ -989,6 +998,7 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 		initLifecycleProcessor();
 
 		// Propagate refresh to lifecycle processor first.
+		// Spring MVC入口
 		getLifecycleProcessor().onRefresh();
 
 		// Publish the final event.
